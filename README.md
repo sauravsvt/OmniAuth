@@ -69,8 +69,8 @@ This monorepo follows a strict separation of concerns between Open Source refere
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-org/omniauth.git
-   cd omniauth
+   git clone https://github.com/sauravsvt/OmniAuth.git
+   cd OmniAuth
    ```
 
 2. **Initialize Dependencies**
@@ -98,5 +98,5 @@ This monorepo follows a strict separation of concerns between Open Source refere
    ```
 
 ## 📜 License
-- **OSS Components**: MIT / Apache 2.0
-- **Proprietary Components**: Commercial License (See LICENSE-PROPRIETARY)
+- **OSS Components**: MIT License (See [LICENSE](LICENSE))
+- **Proprietary Components**: Proprietary License (See [LICENSE-PROPRIETARY](LICENSE-PROPRIETARY))
