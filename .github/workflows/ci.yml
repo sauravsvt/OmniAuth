@@ -1,0 +1,74 @@
+name: OmniAuth CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # JOB 1: The Core (Rust)
+  # Critical: Must compile and pass tests on Linux
+  test-crypto-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      
+      # Cache Cargo registry to speed up builds
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            oss/crypto-core/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run Rust Tests
+        working-directory: ./oss/crypto-core
+        run: cargo test --verbose
+
+  # JOB 2: The Client (React Native)
+  # Checks TypeScript types and runs Jest
+  test-client-mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: oss/client-mobile/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./oss/client-mobile
+        run: npm ci
+
+      - name: Type Check (TypeScript)
+        working-directory: ./oss/client-mobile
+        run: npm run tsc -- --noEmit
+
+      - name: Run Jest Tests
+        working-directory: ./oss/client-mobile
+        run: npm test
+
+  # JOB 3: The Backend (Go)
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Run Go Tests
+        working-directory: ./proprietary/backend
+        run: go test ./...

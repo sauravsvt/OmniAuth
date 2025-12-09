@@ -1,0 +1,36 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+*.swp
+
+# Rush/Monorepo
+.turbo/
+build/
+dist/
+node_modules/
+
+# Rust (oss/crypto-core)
+/oss/crypto-core/target/
+**/*.rs.bk
+Cargo.lock
+
+# React Native (oss/client-mobile)
+/oss/client-mobile/node_modules/
+/oss/client-mobile/.expo/
+/oss/client-mobile/ios/Pods/
+/oss/client-mobile/android/app/build/
+/oss/client-mobile/.env
+/oss/client-mobile/*.lock
+
+# Go (proprietary/backend)
+/proprietary/backend/bin/
+/proprietary/backend/vendor/
+*.exe
+
+# Terraform (infra/terraform)
+/infra/terraform/.terraform/
+/infra/terraform/*.tfstate
+/infra/terraform/*.tfstate.backup

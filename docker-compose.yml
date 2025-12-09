@@ -1,0 +1,6 @@
+version: '3.8'
+services:
+  # Placeholders for future services
+  # api-gateway:
+  # rotation-engine:
+  # db:
