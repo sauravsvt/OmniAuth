@@ -20,11 +20,11 @@ func VerifyIdentity(pubKeyB64, message, signatureB64 string) error {
 	}
 
 	// 2. Load into CIRCL object
+	// 2. Load into CIRCL object
 	pk := mode3.PublicKey{}
-	if len(pkBytes) != mode3.PublicKeySize {
-		return errors.New("public key size mismatch")
+	if err := pk.UnmarshalBinary(pkBytes); err != nil {
+		return fmt.Errorf("invalid public key: %w", err)
 	}
-	copy(pk[:], pkBytes)
 
 	// 3. Decode Signature
 	sigBytes, err := base64.StdEncoding.DecodeString(signatureB64)
