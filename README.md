@@ -50,7 +50,7 @@ This monorepo follows a strict separation of concerns between Open Source refere
 
 ### `proprietary/` (The "SaaS" Layer)
 *Business Logic & Cloud Infrastructure*
-- **`backend/`**: Go services including the API Gateway (`cmd/api`) and Workers (`cmd/worker`).
+- **`backend/`**: Go services including the API Gateway (`cmd/server`) and Workers (`cmd/worker`).
 - **`admin-dashboard/`**: Internal tooling for managing tenants and users.
 
 ### `infra/`
