@@ -97,6 +97,95 @@ This monorepo follows a strict separation of concerns between Open Source refere
    npx expo start
    ```
 
+# OmniAuth Testing Guide
+
+This guide lists the current automated test suites, what each one covers, and how to run them. Follow the quick start to validate all layers (Rust core, Go backend, mobile client).
+
+---
+
+## Prerequisites
+- Node.js 18+ and npm
+- Rust (stable toolchain via rustup)
+- Go 1.21+
+- For mobile runtime checks: Expo CLI (`npm install -g expo-cli`), Android Studio and/or Xcode (macOS).
+
+Verify installations:
+```bash
+node -v && npm -v
+cargo --version
+go version
+```
+
+---
+
+## Test Matrix (what each suite covers)
+- Rust core (`oss/crypto-core`):
+  - `test_vault_lifecycle_hardened`: creates a vault, encrypts/exports the blob, restores from the blob, and signs a payload.
+  - `test_wrong_password`: ensures decrypting with an incorrect password returns `InvalidPassword`.
+- Go backend (`proprietary/backend`):
+  - `ValidSignature`: verifies a valid Dilithium signature is accepted.
+  - `InvalidSignature`: tampered signature is rejected.
+  - `WrongMessage`: signature for the wrong challenge is rejected.
+  - `InvalidPublicKeyFormat`: malformed base64 public keys are rejected.
+- Mobile TypeScript unit tests (`oss/client-mobile`):
+  - `createVault` returns success via the native bridge mock.
+  - `getPublicKey` returns the mocked base64 key.
+  - `signChallenge` returns the signed nonce prefix.
+
+---
+
+## How to Run Automated Tests (latest results)
+
+### 1) Rust crypto core
+```bash
+cd oss/crypto-core
+cargo test
+```
+Last run: ✅ `2 passed` (warnings: unused import `rand_core::RngCore`).
+
+### 2) Go backend
+```bash
+cd proprietary/backend
+go test ./...
+```
+Last run: ✅ `ok` (no test files in `cmd/worker`, crypto package passed).
+
+### 3) Mobile client unit tests (Jest)
+```bash
+cd oss/client-mobile
+npm install
+npm test
+```
+Last run: ✅ `1 passed` (3 tests).
+
+---
+
+## Manual end-to-end sanity check (optional)
+1) Start backend worker (verifier):
+```bash
+cd proprietary/backend
+go run cmd/worker/main.go
+```
+2) Launch the Expo app:
+```bash
+cd oss/client-mobile
+npm install
+npm start
+```
+3) In the app:
+- Enter a password and tap **Generate Identity**.
+- Expect "Vault Created & Unlocked".
+- Tap **Test Signing** to see a success alert with signature length. Backend logs should show verification success when connected.
+
+---
+
+## Troubleshooting
+- If Rust tests fail to compile, ensure `rustup update` has installed the stable toolchain.
+- If Go tests cannot find modules, run `go mod tidy` inside `proprietary/backend`.
+- For mobile tests, clear Jest cache with `npm test -- --clearCache` if mocks are stale.
+
+
+
 ## 📜 License
 - **OSS Components**: MIT License (See [LICENSE](LICENSE))
 - **Proprietary Components**: Proprietary License (See [LICENSE-PROPRIETARY](LICENSE-PROPRIETARY))

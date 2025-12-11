@@ -11,7 +11,6 @@ use std::sync::{Arc, Mutex};
 // use zeroize::{Zeroize, ZeroizeOnDrop}; // Zeroize disabled for now to fix build
 use argon2::{
     password_hash::{
-        rand_core::RngCore,
         PasswordHasher, SaltString
     },
     Argon2
