@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, ActivityIndicator, Alert, StyleSheet, Platform } from 'react-native';
 import { CryptoService } from '../services/CryptoService';
 
 export default function RegistrationScreen() {
@@ -32,13 +32,37 @@ export default function RegistrationScreen() {
         }, 100);
     };
 
-    const handleTestSign = () => {
+    const handleTestSign = async () => {
         try {
             const nonce = "server_challenge_12345";
             const sig = CryptoService.signChallenge(nonce);
-            Alert.alert('Signed!', `Signature length: ${sig.length} chars`);
+
+            // Real Backend Verification
+            Alert.alert('Sending to Quantum Backend...', 'Verifying Dilithium Signature...');
+
+            // Android Emulator needs 10.0.2.2, iOS Simulator uses localhost
+            const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
+
+            const response = await fetch(`${baseUrl}/api/v1/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    public_key: debugKey,
+                    message: nonce,
+                    signature: sig
+                })
+            });
+
+            const json = await response.json();
+
+            if (json.success) {
+                Alert.alert('✅ QUANTUM VERIFIED', 'The backend confirmed your Identity using Dilithium-3.');
+            } else {
+                Alert.alert('❌ REJECTED', `Backend Error: ${json.error}`);
+            }
+
         } catch (e) {
-            Alert.alert('Error', 'Vault is locked.');
+            Alert.alert('Error', `Handshake failed: ${e}`);
         }
     };
 
