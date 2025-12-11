@@ -1,4 +1,5 @@
 # OmniAuth Monorepo
+[![Deploy Status](https://img.shields.io/github/actions/workflow/status/sauravsvt/OmniAuth/ci.yml?branch=main&label=deploy)](https://github.com/sauravsvt/OmniAuth/actions/workflows/ci.yml)
 ### Quantum-Proof Identity & Authentication Platform
 
 OmniAuth is a next-generation security platform built to withstand the threat of quantum computing. By integrating Post-Quantum Cryptography (PQC) directly into the authentication flow, OmniAuth ensures that today's sensitive data remains secure against tomorrow's threats.
