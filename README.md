@@ -128,6 +128,8 @@ go version
   - `InvalidSignature`: tampered signature is rejected.
   - `WrongMessage`: signature for the wrong challenge is rejected.
   - `InvalidPublicKeyFormat`: malformed base64 public keys are rejected.
+  - **`TestHealthEndpoint`**: ensures API gateway is reachable.
+  - **`TestVerifyEndpoint`**: full integration test of the HTTP API (valid & invalid flows).
 - Mobile TypeScript unit tests (`oss/client-mobile`):
   - `createVault` returns success via the native bridge mock.
   - `getPublicKey` returns the mocked base64 key.
