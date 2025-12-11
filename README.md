@@ -1,4 +1,9 @@
 # OmniAuth Monorepo
+
+> [!WARNING]
+> **EXPERIMENTAL CRYPTOGRAPHY**
+> This library implements Post-Quantum Cryptography (Kyber/Dilithium) using the `pqcrypto` crates. While the logic adheres to standard encapsulation/signing flows, this specific implementation has not been audited by a third party. Use at your own risk. Do not use for protecting high-value assets or classified data without further review.
+
 [![Deploy Status](https://img.shields.io/github/actions/workflow/status/sauravsvt/OmniAuth/ci.yml?branch=main&label=deploy)](https://github.com/sauravsvt/OmniAuth/actions/workflows/ci.yml)
 ### Quantum-Proof Identity & Authentication Platform
 
@@ -199,5 +204,5 @@ npm start
 
 
 ## 📜 License
-- **OSS Components**: MIT License (See [LICENSE](LICENSE))
-- **Proprietary Components**: Proprietary License (See [LICENSE-PROPRIETARY](LICENSE-PROPRIETARY))
+- **OSS Components**: GNU AGPL v3.0 (See [LICENSE](LICENSE)). Copyright (c) 2025 Saurav Shriwastav.
+- **Proprietary Components**: Proprietary License (See [LICENSE-PROPRIETARY](LICENSE-PROPRIETARY)). All Rights Reserved.
