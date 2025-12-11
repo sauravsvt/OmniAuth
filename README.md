@@ -144,14 +144,14 @@ go version
 cd oss/crypto-core
 cargo test
 ```
-Last run: ✅ `2 passed` (warnings: unused import `rand_core::RngCore`).
+Last run: ✅ `2 passed` (warnings: none).
 
 ### 2) Go backend
 ```bash
 cd proprietary/backend
 go test ./...
 ```
-Last run: ✅ `ok` (no test files in `cmd/worker`, crypto package passed).
+Last run: ✅ `ok` (server and crypto packages passed).
 
 ### 3) Mobile client unit tests (Jest)
 ```bash
