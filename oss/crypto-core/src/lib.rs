@@ -16,6 +16,8 @@ use argon2::{
     Argon2
 };
 use serde::{Serialize, Deserialize};
+use hkdf::Hkdf;
+use sha2::Sha256;
 
 uniffi::setup_scaffolding!("omniauth_core");
 
@@ -32,6 +34,17 @@ pub enum AuthError {
 // -----------------------------------------------------------------------------
 // Data Structures
 // -----------------------------------------------------------------------------
+
+// Helper function for Domain Separation
+// We use this to derive the final session key from the raw Kyber shared secret.
+fn derive_session_key(raw_secret: &[u8]) -> [u8; 32] {
+    let hkdf = Hkdf::<Sha256>::new(None, raw_secret);
+    let mut okm = [0u8; 32]; // Output Key Material (32 bytes for ChaCha20/AES-256)
+    // "OmniAuth-Session-v1" acts as the info parameter for domain separation
+    hkdf.expand(b"OmniAuth-Session-v1", &mut okm)
+        .expect("HKDF expand failed"); // Length 32 is valid for Sha256
+    okm
+}
 
 #[derive(Serialize, Deserialize)]
 struct VaultBlob {
@@ -82,9 +95,9 @@ impl Identity {
         general_purpose::STANDARD.encode(sig.as_bytes())
     }
 
-    /// Decapsulates a shared secret using this Identity's secret key.
-    /// Input: Ciphertext (Base64 string) from the sender.
-    /// Output: Shared Secret (Base64 string).
+    /// Decapsulates and derives the session key.
+    /// Input: Ciphertext (Base64 string).
+    /// Output: Derived Session Key (Base64 string).
     pub fn recover_shared_secret(&self, ciphertext_b64: String) -> Result<String, AuthError> {
         let ct_bytes = general_purpose::STANDARD.decode(ciphertext_b64)
             .map_err(|_| AuthError::CryptoFailure)?;
@@ -92,11 +105,13 @@ impl Identity {
         let ct = kyber768::Ciphertext::from_bytes(&ct_bytes)
             .map_err(|_| AuthError::CryptoFailure)?;
 
-        let shared_secret = kyber768::decapsulate(&ct, &self.kem_sk);
-        Ok(general_purpose::STANDARD.encode(shared_secret.as_bytes()))
+        let raw_shared_secret = kyber768::decapsulate(&ct, &self.kem_sk);
+        
+        // Apply HKDF
+        let session_key = derive_session_key(raw_shared_secret.as_bytes());
+        
+        Ok(general_purpose::STANDARD.encode(session_key))
     }
-
-
 }
 
 #[uniffi::export]
@@ -107,10 +122,13 @@ pub fn generate_shared_secret(target_public_key: String) -> Result<KEMResult, Au
     let pk = kyber768::PublicKey::from_bytes(&pk_bytes)
         .map_err(|_| AuthError::CryptoFailure)?;
 
-    let (shared_secret, ciphertext) = kyber768::encapsulate(&pk);
+    let (raw_shared_secret, ciphertext) = kyber768::encapsulate(&pk);
+
+    // Apply HKDF
+    let session_key = derive_session_key(raw_shared_secret.as_bytes());
 
     Ok(KEMResult {
-        shared_secret: general_purpose::STANDARD.encode(shared_secret.as_bytes()),
+        shared_secret: general_purpose::STANDARD.encode(session_key),
         ciphertext: general_purpose::STANDARD.encode(ciphertext.as_bytes()),
     })
 }

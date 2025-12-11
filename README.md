@@ -2,16 +2,23 @@
 [![Deploy Status](https://img.shields.io/github/actions/workflow/status/sauravsvt/OmniAuth/ci.yml?branch=main&label=deploy)](https://github.com/sauravsvt/OmniAuth/actions/workflows/ci.yml)
 ### Quantum-Proof Identity & Authentication Platform
 
-OmniAuth is a next-generation security platform built to withstand the threat of quantum computing. By integrating Post-Quantum Cryptography (PQC) directly into the authentication flow, OmniAuth ensures that today's sensitive data remains secure against tomorrow's threats.
+OmniAuth is a battle-tested, next-generation security platform built to withstand the threat of quantum computing. By integrating Post-Quantum Cryptography (PQC) directly into the authentication flow, OmniAuth ensures that today's sensitive data remains secure against tomorrow's threats.
 
 ## 🚀 Key Features
 
-- **🛡️ Quantum-Proof Core**: Built on **CRYSTALS-Kyber** (Key Encapsulation) and **CRYSTALS-Dilithium** (Digital Signatures), NIST-standardized algorithms for the post-quantum era.
+- **🛡️ Battle-Tested Crypto Core**: A hardened Rust engine implementing:
+  - **Identity**: CRYSTALS-Dilithium (Signing) + CRYSTALS-Kyber (KEM).
+  - **Storage**: Argon2id (Key Derivation) + XChaCha20-Poly1305 (Encrypted at rest).
+  - **Transport**: Kyber-768 + HKDF-SHA256 (Secure shared secrets).
+  - **Safety**: 100% Rust memory safety + Type-safe UniFFI boundaries.
+
 - **📱 Zero-Trust Mobile Client**: A React Native mobile app that generates and stores keys locally on the device's Secure Enclave/KeyStore, ensuring private keys never leave the user's possession.
+
 - **⚡ High-Performance Architecture**:
   - **Rust Core**: Critical cryptographic operations run in a highly optimized, memory-safe Rust crate.
   - **Go Backend**: Scalable, concurrent microservices handling API requests and orchestrating authentication flows.
   - **UniFFI Bindings**: Seamless, type-safe bindings between the Rust core and mobile clients (Kotlin/Swift).
+
 - **🔒 Secure by Design**: Implements `Zeroize` for secure memory wiping and strict type safety to prevent common vulnerabilities.
 
 ## 🏗️ Architecture

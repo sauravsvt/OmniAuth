@@ -11,6 +11,8 @@ crate-type = ["cdylib", "staticlib"]
 pqcrypto-kyber = "0.8"
 pqcrypto-dilithium = "0.5"
 pqcrypto-traits = "0.3.5"
+hkdf = "0.12"
+sha2 = "0.10"
 
 # Symmetric Encryption & Hashing
 chacha20poly1305 = "0.10"
