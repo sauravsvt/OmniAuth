@@ -123,6 +123,8 @@ go version
 - Rust core (`oss/crypto-core`):
   - `test_vault_lifecycle_hardened`: creates a vault, encrypts/exports the blob, restores from the blob, and signs a payload.
   - `test_wrong_password`: ensures decrypting with an incorrect password returns `InvalidPassword`.
+  - `test_identity_serialization_internal_roundtrip`: checks that internal keys (Dilithium & Kyber) persist correctly after serialization.
+  - `test_kem_flow`: validates Key Encapsulation Mechanism (Alice wraps secret -> Bob unwraps).
 - Go backend (`proprietary/backend`):
   - `ValidSignature`: verifies a valid Dilithium signature is accepted.
   - `InvalidSignature`: tampered signature is rejected.
@@ -144,7 +146,7 @@ go version
 cd oss/crypto-core
 cargo test
 ```
-Last run: ✅ `2 passed` (warnings: none).
+Last run: ✅ `4 passed` (warnings: none).
 
 ### 2) Go backend
 ```bash

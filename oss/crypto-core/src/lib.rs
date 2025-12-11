@@ -5,7 +5,7 @@ use chacha20poly1305::{
 use pqcrypto_dilithium::dilithium3;
 use pqcrypto_kyber::kyber768;
 use pqcrypto_traits::sign::{SecretKey as _, PublicKey as _, DetachedSignature}; // Added DetachedSignature
-use pqcrypto_traits::kem::{SecretKey as _, PublicKey as _};
+use pqcrypto_traits::kem::{SecretKey as _, PublicKey as _, Ciphertext as _, SharedSecret as _};
 use base64::{Engine as _, engine::general_purpose};
 use std::sync::{Arc, Mutex};
 // use zeroize::{Zeroize, ZeroizeOnDrop}; // Zeroize disabled for now to fix build
@@ -50,14 +50,20 @@ struct SerializableIdentity {
     kem_sk: Vec<u8>,
 }
 
+#[derive(uniffi::Record)]
+pub struct KEMResult {
+    pub shared_secret: String, // Base64 encoded
+    pub ciphertext: String,    // Base64 encoded (to be sent to recipient)
+}
+
 // Core Identity (In-Memory)
 // Removed Zeroize derive for now
 #[derive(uniffi::Object)]
 pub struct Identity {
     sign_pk: dilithium3::PublicKey,
     sign_sk: dilithium3::SecretKey,
-    _kem_pk: kyber768::PublicKey,
-    _kem_sk: kyber768::SecretKey,
+    kem_pk: kyber768::PublicKey,  // Renamed from _kem_pk
+    kem_sk: kyber768::SecretKey,  // Renamed from _kem_sk
 }
 
 // Exported methods
@@ -67,10 +73,46 @@ impl Identity {
         general_purpose::STANDARD.encode(self.sign_pk.as_bytes())
     }
 
+    pub fn get_public_kem_key(&self) -> String {
+        general_purpose::STANDARD.encode(self.kem_pk.as_bytes())
+    }
+
     pub fn sign_payload(&self, message: String) -> String {
         let sig = dilithium3::detached_sign(message.as_bytes(), &self.sign_sk);
         general_purpose::STANDARD.encode(sig.as_bytes())
     }
+
+    /// Decapsulates a shared secret using this Identity's secret key.
+    /// Input: Ciphertext (Base64 string) from the sender.
+    /// Output: Shared Secret (Base64 string).
+    pub fn recover_shared_secret(&self, ciphertext_b64: String) -> Result<String, AuthError> {
+        let ct_bytes = general_purpose::STANDARD.decode(ciphertext_b64)
+            .map_err(|_| AuthError::CryptoFailure)?;
+        
+        let ct = kyber768::Ciphertext::from_bytes(&ct_bytes)
+            .map_err(|_| AuthError::CryptoFailure)?;
+
+        let shared_secret = kyber768::decapsulate(&ct, &self.kem_sk);
+        Ok(general_purpose::STANDARD.encode(shared_secret.as_bytes()))
+    }
+
+
+}
+
+#[uniffi::export]
+pub fn generate_shared_secret(target_public_key: String) -> Result<KEMResult, AuthError> {
+    let pk_bytes = general_purpose::STANDARD.decode(target_public_key)
+        .map_err(|_| AuthError::CryptoFailure)?;
+        
+    let pk = kyber768::PublicKey::from_bytes(&pk_bytes)
+        .map_err(|_| AuthError::CryptoFailure)?;
+
+    let (shared_secret, ciphertext) = kyber768::encapsulate(&pk);
+
+    Ok(KEMResult {
+        shared_secret: general_purpose::STANDARD.encode(shared_secret.as_bytes()),
+        ciphertext: general_purpose::STANDARD.encode(ciphertext.as_bytes()),
+    })
 }
 
 // Internal implementation details (not exposed via UniFFI)
@@ -81,8 +123,8 @@ impl Identity {
         Identity {
             sign_sk: sk,
             sign_pk: pk,
-            _kem_sk: k_sk,
-            _kem_pk: k_pk,
+            kem_sk: k_sk, // Updated name
+            kem_pk: k_pk, // Updated name
         }
     }
     
@@ -91,8 +133,8 @@ impl Identity {
         SerializableIdentity {
             sign_pk: self.sign_pk.as_bytes().to_vec(),
             sign_sk: self.sign_sk.as_bytes().to_vec(),
-            kem_pk: self._kem_pk.as_bytes().to_vec(),
-            kem_sk: self._kem_sk.as_bytes().to_vec(),
+            kem_pk: self.kem_pk.as_bytes().to_vec(), // Updated name
+            kem_sk: self.kem_sk.as_bytes().to_vec(), // Updated name
         }
     }
 
@@ -103,7 +145,7 @@ impl Identity {
         let kem_sk = kyber768::SecretKey::from_bytes(&s.kem_sk).map_err(|_| AuthError::CorruptedVault)?;
 
         Ok(Identity {
-            sign_pk, sign_sk, _kem_pk: kem_pk, _kem_sk: kem_sk
+            sign_pk, sign_sk, kem_pk, kem_sk // Updated names
         })
     }
     
@@ -270,5 +312,78 @@ mod tests {
             Err(AuthError::InvalidPassword) => assert!(true), // Pass
             _ => panic!("Should have failed with InvalidPassword"),
         }
+    }
+
+    #[test]
+    fn test_identity_serialization_internal_roundtrip() {
+        // 1. Setup: Create a fresh identity
+        let original_identity = Identity::new();
+        
+        // 2. Action: Round-trip serialization
+        // We can access private methods 'to_serializable' here because we are in a child module
+        let intermediate_struct = original_identity.to_serializable();
+        let recovered_identity = Identity::from_serializable(intermediate_struct)
+            .expect("Deserialization logic failed");
+
+        // 3. Assertions: Deep verify keys
+        
+        // A. Verify Signing Keys (Dilithium)
+        // Public Key check (Using the public API)
+        assert_eq!(
+            original_identity.get_public_signing_key(),
+            recovered_identity.get_public_signing_key(),
+            "Public signing keys must match"
+        );
+
+        // Secret Key check (Direct byte comparison - valid in unit tests)
+        assert_eq!(
+            original_identity.sign_sk.as_bytes(),
+            recovered_identity.sign_sk.as_bytes(),
+            "Dilithium secret keys must match exactly"
+        );
+
+        // B. Verify KEM Keys (Kyber)
+        // Since these are marked private in the struct (_kem_pk), we verify them by byte comparison
+        assert_eq!(
+            original_identity.kem_pk.as_bytes(),
+            recovered_identity.kem_pk.as_bytes(),
+            "Kyber public keys must match exactly"
+        );
+        assert_eq!(
+            original_identity.kem_sk.as_bytes(),
+            recovered_identity.kem_sk.as_bytes(),
+            "Kyber secret keys must match exactly"
+        );
+
+        // C. Functional Sanity Check
+        // Ensure the recovered identity can still sign payloads
+        let sig = recovered_identity.sign_payload("verification_test".to_string());
+        assert!(!sig.is_empty(), "Recovered identity must be able to sign");
+    }
+
+    #[test]
+    fn test_kem_flow() {
+        // 1. Setup: Alice wants to send a secret to Bob
+        let bob_identity = Identity::new();
+        let bob_pub_key = bob_identity.get_public_kem_key();
+
+        // 2. Alice encapsulates (generates secret + ciphertext)
+        // Alice does NOT need her own Identity to do this, just Bob's public key.
+        let kem_result = generate_shared_secret(bob_pub_key)
+            .expect("Encapsulation failed");
+
+        assert!(!kem_result.shared_secret.is_empty());
+        assert!(!kem_result.ciphertext.is_empty());
+
+        // 3. Bob receives ciphertext and decapsulates
+        let recovered_secret = bob_identity.recover_shared_secret(kem_result.ciphertext)
+            .expect("Decapsulation failed");
+
+        // 4. Verify secrets match
+        assert_eq!(
+            kem_result.shared_secret, 
+            recovered_secret, 
+            "Alice and Bob must share the exact same secret"
+        );
     }
 }
