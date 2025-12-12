@@ -138,7 +138,7 @@ This guide lists the current automated test suites, what each one covers, and ho
   - `test_wrong_password`: Verifies `InvalidPassword` on incorrect credentials.
   - `test_corrupted_nonce_length`: Verifies `CorruptedVault` on tampered nonce.
   - `test_kem_flow_via_vault`: Validates KEM encapsulation/decapsulation via Vault.
-  - `interop_tests` (gated/disabled): Generates vectors for Go verification; currently disabled pending library alignment.
+  - `interop_tests` (gated/disabled): Generates vectors for Go verification; currently disabled pending encoding/spec alignment between Rust and Go PQC libraries.
 
 - **Go backend** (`proprietary/backend`):
   - `ValidSignature`, `InvalidSignature`, `WrongMessage`, `InvalidPublicKeyFormat`: Signature verification tests.
@@ -158,6 +158,12 @@ cd oss/crypto-core
 cargo test
 ```
 Last run: ✅ `4 passed, 1 ignored` (warnings: none).
+
+To run the ignored interop vector generation test:
+```bash
+cargo test generate_interop_vectors -- --ignored
+```
+Last run: ✅ `1 passed`.
 
 ### 2) Go backend
 ```bash
