@@ -166,39 +166,37 @@ impl Vault {
 
         let salt = SaltString::from_b64(&blob.salt).map_err(|_| AuthError::CorruptedVault)?;
         let argon2 = Argon2::default();
-        
-        let mut kek = [0u8; 32];
-        argon2.hash_password_into(password.as_bytes(), salt.as_str().as_bytes(), &mut kek)
-             .map_err(|_| AuthError::CryptoFailure)?; 
 
-        let cipher = XChaCha20Poly1305::new(&ChaChaKey::from_slice(&kek));
+        // Use Zeroizing wrapper so KEK is wiped even on early ? returns
+        let mut kek = Zeroizing::new([0u8; 32]);
+        argon2.hash_password_into(password.as_bytes(), salt.as_str().as_bytes(), &mut kek[..])
+            .map_err(|_| AuthError::CryptoFailure)?;
+
+        let cipher = XChaCha20Poly1305::new(&ChaChaKey::from_slice(&kek[..]));
+
         let nonce_bytes = general_purpose::STANDARD.decode(&blob.nonce)
             .map_err(|_| AuthError::CorruptedVault)?;
-            
         if nonce_bytes.len() != 24 {
             return Err(AuthError::CorruptedVault);
         }
         let nonce = XNonce::from_slice(&nonce_bytes);
-        
+
         let ciphertext = general_purpose::STANDARD.decode(&blob.ciphertext)
             .map_err(|_| AuthError::CorruptedVault)?;
-        
-        // AAD binds the version
-        let aad = format!("OmniAuth-VaultBlob-v{}", blob.version);
-        let payload = chacha20poly1305::aead::Payload {
-            msg: &ciphertext,
-            aad: aad.as_bytes(),
-        };
-            
-        let mut plaintext = cipher.decrypt(nonce, payload)
-            .map_err(|_| AuthError::InvalidPassword)?; 
 
-        let serializable: SerializableIdentity = serde_json::from_slice(&plaintext)
-            .map_err(|_| AuthError::CorruptedVault)?;
-        
-        kek.zeroize();
-        plaintext.zeroize();
-            
+        // Static AAD — matches encrypt path exactly, avoids format! allocation
+        let aad = b"OmniAuth-VaultBlob-v1";
+        let payload = chacha20poly1305::aead::Payload { msg: &ciphertext, aad };
+
+        // Wrap plaintext in Zeroizing so it's wiped even if JSON parse fails
+        let plaintext = Zeroizing::new(
+            cipher.decrypt(nonce, payload)
+                .map_err(|_| AuthError::InvalidPassword)?
+        );
+
+        let serializable: SerializableIdentity =
+            serde_json::from_slice(&plaintext).map_err(|_| AuthError::CorruptedVault)?;
+
         Identity::from_serializable(serializable)
     }
 }
