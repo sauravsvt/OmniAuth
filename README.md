@@ -1,30 +1,39 @@
 # OmniAuth Monorepo
 
 > [!WARNING]
-> **EXPERIMENTAL CRYPTOGRAPHY**
-> This library implements Post-Quantum Cryptography (Kyber/Dilithium) using the `pqcrypto` crates. While the logic adheres to standard encapsulation/signing flows, this specific implementation has not been audited by a third party. Use at your own risk. Do not use for protecting high-value assets or classified data without further review.
+> **EXPERIMENTAL CRYPTOGRAPHY / NOT AUDITED**
+> OmniAuth is a prototype/reference implementation exploring post-quantum authentication flows.
+> It has not been independently audited. Do not use to protect high-value assets or classified data.
 
-[![Deploy Status](https://img.shields.io/github/actions/workflow/status/sauravsvt/OmniAuth/ci.yml?branch=main&label=deploy)](https://github.com/sauravsvt/OmniAuth/actions/workflows/ci.yml)
-### Quantum-Proof Identity & Authentication Platform
+[![CI](https://img.shields.io/github/actions/workflow/status/sauravsvt/OmniAuth/ci.yml?branch=main&label=ci)](https://github.com/sauravsvt/OmniAuth/actions/workflows/ci.yml)
 
-OmniAuth is a battle-tested, next-generation security platform built to withstand the threat of quantum computing. By integrating Post-Quantum Cryptography (PQC) directly into the authentication flow, OmniAuth ensures that today's sensitive data remains secure against tomorrow's threats.
+### Post-Quantum Identity & Authentication Platform (Prototype)
+
+OmniAuth integrates post-quantum cryptography (PQC) into an authentication flow using NIST-standardized primitives:
+- **ML-KEM-768 (FIPS 203)** for key encapsulation
+- **ML-DSA-65 (FIPS 204)** for signatures (formerly "Dilithium3")
+
+This repo focuses on correctness, test coverage, and clear threat-model boundaries — not production certification.
 
 ## 🚀 Key Features
 
-- **🛡️ Battle-Tested Crypto Core**: A hardened Rust engine implementing:
-  - **Identity**: CRYSTALS-Dilithium (Signing) + CRYSTALS-Kyber (KEM).
-  - **Storage**: Argon2id (Key Derivation) + XChaCha20-Poly1305 (Encrypted at rest).
-  - **Transport**: Kyber-768 + HKDF-SHA256 (Secure shared secrets).
-  - **Safety**: 100% Rust memory safety + Type-safe UniFFI boundaries.
+- **🛡️ Hardened Crypto Core (Rust)**
+  - **Transient Secrets**: Private keys exist in memory *only* for the duration of a single operation (`sign`, `recover_shared_secret`). There is no long-lived `Identity` object.
+  - **Encrypted Vault at Rest**: Vault persists only an encrypted blob (XChaCha20-Poly1305 + Argon2id).
+  - **Memory Hygiene**: Key-encryption keys (KEK) and plaintext buffers are wiped using `zeroize` where possible. Note: Upstream `pqcrypto` key types may not fully zeroize on drop.
+  - **Versioned Vault Format + AAD**: Vault blobs are versioned and authenticated with associated data (AAD) to prevent silent tampering.
+  - **Standards-Aligned Primitives**: Implements the ML-KEM-768 parameter set (FIPS 203) and ML-DSA-65 parameter set (FIPS 204).
 
-- **📱 Zero-Trust Mobile Client**: A React Native mobile app that generates and stores keys locally on the device's Secure Enclave/KeyStore, ensuring private keys never leave the user's possession.
+- **📱 Zero-Trust Mobile Client (Reference)**
+  - React Native (Expo) client that generates keys locally.
+  - Optional platform-backed storage (e.g., KeyStore / Secure Enclave) depending on device/OS support.
 
-- **⚡ High-Performance Architecture**:
-  - **Rust Core**: Critical cryptographic operations run in a highly optimized, memory-safe Rust crate.
-  - **Go Backend**: Scalable, concurrent microservices handling API requests and orchestrating authentication flows.
-  - **UniFFI Bindings**: Seamless, type-safe bindings between the Rust core and mobile clients (Kotlin/Swift).
+- **⚡ High-Performance Architecture**
+  - Rust crypto core + UniFFI bindings (Kotlin/Swift)
+  - Go backend microservices for orchestration and verification
 
-- **🔒 Secure by Design**: Implements `Zeroize` for secure memory wiping and strict type safety to prevent common vulnerabilities.
+## 🔬 Notes on "Quantum-Safe"
+PQC reduces risk from "harvest now, decrypt later" attacks, but security depends on the full protocol (challenge freshness, replay resistance, device binding, recovery, etc.). OmniAuth is an evolving reference implementation.
 
 ## 🏗️ Architecture
 
@@ -73,7 +82,7 @@ This monorepo follows a strict separation of concerns between Open Source refere
 
 ### Prerequisites
 - **Rust**: 1.70+ (`rustup update`)
-- **Go**: 1.21+
+- **Go**: 1.22+
 - **Node.js**: 18+ (LTS)
 - **Yarn/npm**: For managing JS dependencies.
 - **Docker**: For running local database instances.
@@ -88,7 +97,6 @@ This monorepo follows a strict separation of concerns between Open Source refere
 
 2. **Initialize Dependencies**
    ```bash
-   # Install generic dependencies (adjust based on your tooling, e.g., Turborepo)
    npm install
    ```
 
@@ -112,60 +120,51 @@ This monorepo follows a strict separation of concerns between Open Source refere
 
 # OmniAuth Testing Guide
 
-This guide lists the current automated test suites, what each one covers, and how to run them. Follow the quick start to validate all layers (Rust core, Go backend, mobile client).
+This guide lists the current automated test suites, what each one covers, and how to run them.
 
 ---
 
 ## Prerequisites
 - Node.js 18+ and npm
 - Rust (stable toolchain via rustup)
-- Go 1.21+
-- For mobile runtime checks: Expo CLI (`npm install -g expo-cli`), Android Studio and/or Xcode (macOS).
-
-Verify installations:
-```bash
-node -v && npm -v
-cargo --version
-go version
-```
+- Go 1.22+
+- For mobile runtime checks: Expo CLI, Android Studio and/or Xcode (macOS).
 
 ---
 
-## Test Matrix (what each suite covers)
-- Rust core (`oss/crypto-core`):
-  - `test_vault_lifecycle_hardened`: creates a vault, encrypts/exports the blob, restores from the blob, and signs a payload.
-  - `test_wrong_password`: ensures decrypting with an incorrect password returns `InvalidPassword`.
-  - `test_identity_serialization_internal_roundtrip`: checks that internal keys (Dilithium & Kyber) persist correctly after serialization.
-  - `test_kem_flow`: validates Key Encapsulation Mechanism (Alice wraps secret -> Bob unwraps).
-- Go backend (`proprietary/backend`):
-  - `ValidSignature`: verifies a valid Dilithium signature is accepted.
-  - `InvalidSignature`: tampered signature is rejected.
-  - `WrongMessage`: signature for the wrong challenge is rejected.
-  - `InvalidPublicKeyFormat`: malformed base64 public keys are rejected.
-  - **`TestHealthEndpoint`**: ensures API gateway is reachable.
-  - **`TestVerifyEndpoint`**: full integration test of the HTTP API (valid & invalid flows).
-- Mobile TypeScript unit tests (`oss/client-mobile`):
-  - `createVault` returns success via the native bridge mock.
-  - `getPublicKey` returns the mocked base64 key.
-  - `signChallenge` returns the signed nonce prefix.
+## Test Matrix
+- **Rust core** (`oss/crypto-core`):
+  - `test_vault_lifecycle_transient`: Creates vault, signs transiently, restores from blob.
+  - `test_wrong_password`: Verifies `InvalidPassword` on incorrect credentials.
+  - `test_corrupted_nonce_length`: Verifies `CorruptedVault` on tampered nonce.
+  - `test_kem_flow_via_vault`: Validates KEM encapsulation/decapsulation via Vault.
+  - `interop_tests` (gated/disabled): Generates vectors for Go verification; currently disabled pending library alignment.
+
+- **Go backend** (`proprietary/backend`):
+  - `ValidSignature`, `InvalidSignature`, `WrongMessage`, `InvalidPublicKeyFormat`: Signature verification tests.
+  - `TestReplayProtection`: Protocol-level test demonstrating challenge-response replay protection.
+  - `TestHealthEndpoint`, `TestVerifyEndpoint`: API integration tests.
+
+- **Mobile client** (`oss/client-mobile`):
+  - `createVault`, `getPublicKey`, `signChallenge`: Native bridge mocks.
 
 ---
 
-## How to Run Automated Tests (latest results)
+## How to Run Automated Tests
 
 ### 1) Rust crypto core
 ```bash
 cd oss/crypto-core
 cargo test
 ```
-Last run: ✅ `4 passed` (warnings: none).
+Last run: ✅ `4 passed, 1 ignored` (warnings: none).
 
 ### 2) Go backend
 ```bash
 cd proprietary/backend
 go test ./...
 ```
-Last run: ✅ `ok` (server and crypto packages passed).
+Last run: ✅ `ok`.
 
 ### 3) Mobile client unit tests (Jest)
 ```bash
@@ -177,32 +176,15 @@ Last run: ✅ `1 passed` (3 tests).
 
 ---
 
-## Manual end-to-end sanity check (optional)
-1) Start backend worker (verifier):
-```bash
-cd proprietary/backend
-go run cmd/worker/main.go
-```
-2) Launch the Expo app:
-```bash
-cd oss/client-mobile
-npm install
-npm start
-```
-3) In the app:
-- Enter a password and tap **Generate Identity**.
-- Expect "Vault Created & Unlocked".
-- Tap **Test Signing** to see a success alert with signature length. Backend logs should show verification success when connected.
-
----
-
 ## Troubleshooting
 - If Rust tests fail to compile, ensure `rustup update` has installed the stable toolchain.
 - If Go tests cannot find modules, run `go mod tidy` inside `proprietary/backend`.
 - For mobile tests, clear Jest cache with `npm test -- --clearCache` if mocks are stale.
 
-
-
 ## 📜 License
 - **OSS Components**: GNU AGPL v3.0 (See [LICENSE](LICENSE)). Copyright (c) 2025 Saurav Shriwastav.
 - **Proprietary Components**: Proprietary License (See [LICENSE-PROPRIETARY](LICENSE-PROPRIETARY)). All Rights Reserved.
+
+## 🗺️ Roadmap
+- Enable interop tests after FIPS library alignment.
+- NIST selected HQC in March 2025 as a backup encryption algorithm to ML-KEM; consider integration.

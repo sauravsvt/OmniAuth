@@ -1,7 +1,7 @@
 module github.com/omniauth/backend
 
-go 1.21
+go 1.22.0
 
-require github.com/cloudflare/circl v1.3.6
+require github.com/cloudflare/circl v1.6.1
 
-require golang.org/x/sys v0.3.0 // indirect
+require golang.org/x/sys v0.10.0 // indirect
