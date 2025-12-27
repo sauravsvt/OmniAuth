@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "generated_at": "2025-12-27T00:00:00Z",
+  "age_proofs": [
+    {
+      "test_case": "valid_adult",
+      "current_date": 2025,
+      "age_threshold": 18,
+      "birth_date": 2000,
+      "expected_valid": true,
+      "proof_base64": "ZStAlnNmDIJshJ4pojZP5iV1/Kq8seSJwBBbJMOn3BqqupEF9AlPcWtb4xb/pDmMbFTMw812+fBy2G8bkMIFCT8Yf6JIc21M5cwyZnLA8R7CdccxYdaVXQVBp+3plT+Ouvo7BgTd0VJNMeo5IswmDmW3If957vZzISTRQxwBwgI=",
+      "public_inputs_base64": "AgAAAAAAAADpBwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "verifying_key_base64": "P5jDNqBDKGkFYA9CcgE4Z1Wvj9ZHkjOlPNQI79qYNo/gCBSbqwRCHvDNQE9pQxaa19dJdzRjRgEtpjwEaZ6iFPdhHAEInJImcwZkC8sKkUmOB3DHBosG+yk4RKUaehylrIyKhaVSU4PT4mY2bI1U+f38fkuEBb1WzgW7Gum/DgaVSVSAySn9OHZ/HJRZGmWr4SHbo3d9PKSKjjtHZ4u9Elkvn/v9NOa6fGNO2PSkrVr5jK8d3a0oZgzmeGdVUicDcjshEWmG2Xejs7De5k3uF1g5WBI1goGY2WlMALMHECMDAAAAAAAAAGBNenvxwBlyUdME1gWjDo37qZPScuu5QuuBAmnUyZiGUsp6HXTvG2n/mXAV5hdzFiKGxubS24DT1tSMGaN4ch3bU2CB6d3hZITzjJpwXDibO9VE/+VZYs2pjmCgQzNMBw=="
+    },
+    {
+      "test_case": "exactly_at_threshold",
+      "current_date": 2025,
+      "age_threshold": 18,
+      "birth_date": 2007,
+      "expected_valid": true,
+      "proof_base64": "GOWL5oUAChpTpXXZFHZg8HO06Exdft08wfjHc/JDtQ/cqrLDoz7FpoTdv9xROOWA1DEGDqUu3KGWxnsLS/f/H3xNHDPyN7A+327dUjmrS+mKz09Tg2sP7e/zOkjjg7+rVQeBzl4y5Tf1CwbWId2QiAz+l2jbFo+FupgfPe0c2i8=",
+      "public_inputs_base64": "AgAAAAAAAADpBwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "verifying_key_base64": "P5jDNqBDKGkFYA9CcgE4Z1Wvj9ZHkjOlPNQI79qYNo/gCBSbqwRCHvDNQE9pQxaa19dJdzRjRgEtpjwEaZ6iFPdhHAEInJImcwZkC8sKkUmOB3DHBosG+yk4RKUaehylrIyKhaVSU4PT4mY2bI1U+f38fkuEBb1WzgW7Gum/DgaVSVSAySn9OHZ/HJRZGmWr4SHbo3d9PKSKjjtHZ4u9Elkvn/v9NOa6fGNO2PSkrVr5jK8d3a0oZgzmeGdVUicDcjshEWmG2Xejs7De5k3uF1g5WBI1goGY2WlMALMHECMDAAAAAAAAAGBNenvxwBlyUdME1gWjDo37qZPScuu5QuuBAmnUyZiGUsp6HXTvG2n/mXAV5hdzFiKGxubS24DT1tSMGaN4ch3bU2CB6d3hZITzjJpwXDibO9VE/+VZYs2pjmCgQzNMBw=="
+    },
+    {
+      "test_case": "well_over_threshold",
+      "current_date": 2025,
+      "age_threshold": 21,
+      "birth_date": 1990,
+      "expected_valid": true,
+      "proof_base64": "kopPX+ceGjJycloPy0SxhO6nJL5csvGLgHnS6+rcea72aK4vz1fYBAhuKhsxCwA2QvfdeeLnCxXHa39r3zRPFK6vaLRlFDxjGdTrUF/nheNO8eqjyfPiJaW8EcI3qqwK6Wpa6YclRqx7FjxwKdGDIbSx40ecdRcc36ea7nD2C4s=",
+      "public_inputs_base64": "AgAAAAAAAADpBwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "verifying_key_base64": "P5jDNqBDKGkFYA9CcgE4Z1Wvj9ZHkjOlPNQI79qYNo/gCBSbqwRCHvDNQE9pQxaa19dJdzRjRgEtpjwEaZ6iFPdhHAEInJImcwZkC8sKkUmOB3DHBosG+yk4RKUaehylrIyKhaVSU4PT4mY2bI1U+f38fkuEBb1WzgW7Gum/DgaVSVSAySn9OHZ/HJRZGmWr4SHbo3d9PKSKjjtHZ4u9Elkvn/v9NOa6fGNO2PSkrVr5jK8d3a0oZgzmeGdVUicDcjshEWmG2Xejs7De5k3uF1g5WBI1goGY2WlMALMHECMDAAAAAAAAAGBNenvxwBlyUdME1gWjDo37qZPScuu5QuuBAmnUyZiGUsp6HXTvG2n/mXAV5hdzFiKGxubS24DT1tSMGaN4ch3bU2CB6d3hZITzjJpwXDibO9VE/+VZYs2pjmCgQzNMBw=="
+    }
+  ]
+}

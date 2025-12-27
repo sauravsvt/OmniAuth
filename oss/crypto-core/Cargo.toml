@@ -27,5 +27,16 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 zeroize = { version = "1.7", features = ["derive"] } # Memory wiping
 
+# Zero-Knowledge Proofs (arkworks ecosystem)
+ark-ff = "0.4"
+ark-ec = "0.4"
+ark-bn254 = "0.4"           # BN254 curve for Groth16 (Ethereum-compatible)
+ark-groth16 = "0.4"
+ark-snark = "0.4"
+ark-relations = "0.4"
+ark-r1cs-std = "0.4"
+ark-serialize = { version = "0.4", features = ["derive"] }
+ark-std = "0.4"
+
 [build-dependencies]
 uniffi = { version = "0.27", features = ["build"] }

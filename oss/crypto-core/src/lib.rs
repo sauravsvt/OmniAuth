@@ -16,6 +16,9 @@ use serde::{Serialize, Deserialize};
 use hkdf::Hkdf;
 use sha2::Sha256;
 
+// ZK Module - Zero-Knowledge Proofs for Identity Claims
+pub mod zk;
+
 uniffi::setup_scaffolding!("omniauth_core");
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]

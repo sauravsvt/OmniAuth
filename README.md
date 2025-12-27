@@ -194,3 +194,9 @@ Last run: ✅ `1 passed` (3 tests).
 ## 🗺️ Roadmap
 - Enable interop tests after FIPS library alignment.
 - NIST selected HQC in March 2025 as a backup encryption algorithm to ML-KEM; consider integration.
+
+
+COMING UP
+3.New cryptographic construction (hard, PhD-level)
+2. Formal proof of security (Tamarin, ProVerif)
+1. Solving an unsolved practical problem (key rotation at scale, threshold PQC)
