@@ -1,16 +1,15 @@
 import { requireNativeModule } from 'expo-modules-core';
 
-// Connect to the Kotlin/Swift Module defined above
 const OmniAuthNative = requireNativeModule('OmniAuth');
 
 export class CryptoService {
     /**
-     * Generates a fresh Quantum-Safe Identity.
-     * In a real app, this would also persist the Encrypted Blob to MMKV.
+     * Creates a new Quantum-Safe Vault with PQC key material.
+     * The vault encrypts identity keys using the master password (Argon2id + XChaCha20-Poly1305).
      */
     static async createVault(password: string): Promise<boolean> {
         try {
-            const result = OmniAuthNative.createVault(password);
+            const result = await OmniAuthNative.createVault(password);
             return result === 'SUCCESS';
         } catch (e) {
             console.error('Failed to create vault', e);
@@ -20,29 +19,55 @@ export class CryptoService {
 
     /**
      * Returns the Dilithium3 Public Key (Base64).
-     * Used during User Registration.
+     * Requires password to verify vault integrity before extracting.
      */
-    static getPublicKey(): string {
+    static async getPublicKey(password: string): Promise<string> {
         try {
-            return OmniAuthNative.getPublicKey();
+            return await OmniAuthNative.getPublicKey(password);
         } catch (e) {
+            console.error('Failed to get public key', e);
             return '';
         }
     }
 
     /**
-     * Signs a server nonce using the Dilithium Private Key.
-     * @param nonce The random string from the server
+     * Signs a server challenge using the Dilithium Private Key.
+     * The private key is decrypted transiently -- it never persists in memory.
+     * @param password The master password to decrypt the vault
+     * @param message The challenge/nonce from the server
      */
-    static signChallenge(nonce: string): string {
+    static async signChallenge(password: string, message: string): Promise<string> {
         try {
-            return OmniAuthNative.signChallenge(nonce);
+            return await OmniAuthNative.signChallenge(password, message);
         } catch (e) {
             console.error('Signing failed', e);
             throw e;
         }
     }
 
+    /**
+     * Exports the encrypted vault blob for persistence (e.g., to MMKV or SecureStore).
+     */
+    static exportBlob(): string {
+        return OmniAuthNative.exportBlob();
+    }
+
+    /**
+     * Restores a vault from a previously exported encrypted blob.
+     */
+    static async restoreVault(encryptedBlob: string): Promise<boolean> {
+        try {
+            const result = await OmniAuthNative.restoreVault(encryptedBlob);
+            return result === 'SUCCESS';
+        } catch (e) {
+            console.error('Failed to restore vault', e);
+            return false;
+        }
+    }
+
+    /**
+     * Locks the vault by clearing it from memory.
+     */
     static lock(): void {
         OmniAuthNative.lock();
     }

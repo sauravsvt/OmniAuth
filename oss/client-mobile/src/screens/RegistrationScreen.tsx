@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ActivityIndicator, Alert, StyleSheet, Platform } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, Platform } from 'react-native';
 import { CryptoService } from '../services/CryptoService';
 
 export default function RegistrationScreen() {
@@ -15,16 +15,13 @@ export default function RegistrationScreen() {
 
         setStatus('Generating Quantum Keys...');
 
-        // 1. Offload to Rust (Heavy CPU task)
-        // We use setTimeout to allow UI to render the loading state before freezing slightly
         setTimeout(async () => {
             const success = await CryptoService.createVault(password);
 
             if (success) {
-                // 2. Fetch the Public Key to show user (or send to API)
-                const pubKey = CryptoService.getPublicKey();
+                const pubKey = await CryptoService.getPublicKey(password);
                 setDebugKey(pubKey);
-                setStatus('Vault Created & Unlocked');
+                setStatus('Vault Created');
                 Alert.alert('Success', 'Your identity is now Quantum-Proof.');
             } else {
                 setStatus('Failed');
@@ -35,12 +32,10 @@ export default function RegistrationScreen() {
     const handleTestSign = async () => {
         try {
             const nonce = "server_challenge_12345";
-            const sig = CryptoService.signChallenge(nonce);
+            const sig = await CryptoService.signChallenge(password, nonce);
 
-            // Real Backend Verification
             Alert.alert('Sending to Quantum Backend...', 'Verifying Dilithium Signature...');
 
-            // Android Emulator needs 10.0.2.2, iOS Simulator uses localhost
             const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
 
             const response = await fetch(`${baseUrl}/api/v1/verify`, {
@@ -56,9 +51,9 @@ export default function RegistrationScreen() {
             const json = await response.json();
 
             if (json.success) {
-                Alert.alert('✅ QUANTUM VERIFIED', 'The backend confirmed your Identity using Dilithium-3.');
+                Alert.alert('QUANTUM VERIFIED', 'The backend confirmed your Identity using Dilithium-3.');
             } else {
-                Alert.alert('❌ REJECTED', `Backend Error: ${json.error}`);
+                Alert.alert('REJECTED', `Backend Error: ${json.error}`);
             }
 
         } catch (e) {

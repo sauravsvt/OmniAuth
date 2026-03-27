@@ -39,7 +39,8 @@ func main() {
 			continue
 		}
 		
-		log.Printf("✅ Rotation Success. New Creds: %s", newCreds)
+		log.Printf("✅ Rotation Success. Credentials rotated for job.")
+		_ = newCreds
 		
 		// TODO: Re-encrypt newCreds with User's Public Key (Kyber) 
 		// so only the User can read the new password on their device.

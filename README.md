@@ -15,38 +15,47 @@ OmniAuth integrates post-quantum cryptography (PQC) into an authentication flow 
 
 This repo focuses on correctness, test coverage, and clear threat-model boundaries — not production certification.
 
-## 🚀 Key Features
+## Key Features
 
-- **🛡️ Hardened Crypto Core (Rust)**
-  - **Transient Secrets**: Private keys exist in memory *only* for the duration of a single operation (`sign`, `recover_shared_secret`). There is no long-lived `Identity` object.
+- **Hardened Crypto Core (Rust)**
+  - **Transient Secrets**: Private keys exist in memory *only* for the duration of a single operation (`sign`, `recover_shared_secret`). There is no long-lived `Identity` object exposed via FFI.
   - **Encrypted Vault at Rest**: Vault persists only an encrypted blob (XChaCha20-Poly1305 + Argon2id).
   - **Memory Hygiene**: Key-encryption keys (KEK) and plaintext buffers are wiped using `zeroize` where possible. Note: Upstream `pqcrypto` key types may not fully zeroize on drop.
   - **Versioned Vault Format + AAD**: Vault blobs are versioned and authenticated with associated data (AAD) to prevent silent tampering.
   - **Standards-Aligned Primitives**: Implements the ML-KEM-768 parameter set (FIPS 203) and ML-DSA-65 parameter set (FIPS 204).
 
-- **📱 Zero-Trust Mobile Client (Reference)**
-  - React Native (Expo) client that generates keys locally.
+- **Zero-Knowledge Identity Claims (Rust, arkworks)**
+  - **Groth16 proofs on BN254** for privacy-preserving attribute verification.
+  - **Age Proof**: Prove `age >= threshold` without revealing birth date.
+  - **Range Proof**: Prove `min <= value <= max` without revealing the value.
+  - **Sound bit decomposition**: Slack variables are constrained to 64 bits via bit decomposition, preventing finite-field wrap-around attacks.
+  - **Standalone verifier**: Verifying keys can be exported and used independently of the prover.
+
+- **Zero-Trust Mobile Client (Reference)**
+  - React Native (Expo) client with UniFFI-generated native bindings.
+  - Vault-based architecture: password required for every cryptographic operation (no long-lived unlocked state).
   - Optional platform-backed storage (e.g., KeyStore / Secure Enclave) depending on device/OS support.
 
-- **⚡ High-Performance Architecture**
+- **High-Performance Architecture**
   - Rust crypto core + UniFFI bindings (Kotlin/Swift)
-  - Go backend microservices for orchestration and verification
+  - Go backend microservices for orchestration and verification (Cloudflare CIRCL)
 
-## 🔬 Notes on "Quantum-Safe"
+## Notes on "Quantum-Safe"
 PQC reduces risk from "harvest now, decrypt later" attacks, but security depends on the full protocol (challenge freshness, replay resistance, device binding, recovery, etc.). OmniAuth is an evolving reference implementation.
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 graph TD
-    subgraph Mobile Device
+    subgraph MobileDevice [Mobile Device]
         UI[React Native UI]
         Bridge[UniFFI Bridge]
         RustCore[Rust Crypto Core]
+        ZKEngine[ZK Proof Engine]
         SecureStore[Device Secure Store]
     end
 
-    subgraph Backend Infrastructure
+    subgraph BackendInfra [Backend Infrastructure]
         API[Go API Gateway]
         DB[(PostgreSQL)]
         Worker[Rotation Engine]
@@ -54,38 +63,36 @@ graph TD
 
     UI -->|Calls| Bridge
     Bridge -->|Invokes| RustCore
+    RustCore -->|ZK Proofs| ZKEngine
     RustCore -->|Stores Keys| SecureStore
     RustCore -->|Sign/Encrypt| API
     API -->|Persist| DB
     Worker -->|Maint| DB
 ```
 
-## 📂 Project Structure
+## Project Structure
 
 This monorepo follows a strict separation of concerns between Open Source reference implementations and Proprietary business logic.
 
 ### `oss/` (The "Trust" Layer)
 *Open Source, Audit-Ready Core Components*
-- **`crypto-core/`**: The heart of the platform. A Rust crate implementing PQC algorithms.
+- **`crypto-core/`**: The heart of the platform. A Rust crate implementing PQC algorithms and ZK circuits.
+  - `src/lib.rs` — Vault, KEM, signing APIs
+  - `src/zk/` — Zero-knowledge proof circuits, prover, verifier, interop vectors
 - **`client-mobile/`**: Reference mobile application built with React Native (Expo) and TypeScript.
 
 ### `proprietary/` (The "SaaS" Layer)
 *Business Logic & Cloud Infrastructure*
 - **`backend/`**: Go services including the API Gateway (`cmd/server`) and Workers (`cmd/worker`).
-- **`admin-dashboard/`**: Internal tooling for managing tenants and users.
+- **`backend/db/`**: PostgreSQL schema for users and rotation jobs.
 
-### `infra/`
-- **`terraform/`**: Infrastructure as Code definitions.
-- **`docker/`**: Containerization setups for local dev and production.
-
-## 🛠️ Getting Started
+## Getting Started
 
 ### Prerequisites
 - **Rust**: 1.70+ (`rustup update`)
 - **Go**: 1.22+
 - **Node.js**: 18+ (LTS)
-- **Yarn/npm**: For managing JS dependencies.
-- **Docker**: For running local database instances.
+- **npm**: For managing JS dependencies.
 
 ### Installation
 
@@ -95,108 +102,104 @@ This monorepo follows a strict separation of concerns between Open Source refere
    cd OmniAuth
    ```
 
-2. **Initialize Dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Build Crypto Core**
+2. **Build Crypto Core**
    ```bash
    cd oss/crypto-core
    cargo build --release
    ```
 
-4. **Run Backend (Local)**
+3. **Run Backend (Local)**
    ```bash
    cd proprietary/backend
    go run cmd/server/main.go
    ```
 
-5. **Start Mobile App**
+4. **Start Mobile App**
    ```bash
    cd oss/client-mobile
+   npm install
    npx expo start
    ```
 
-# OmniAuth Testing Guide
-
-This guide lists the current automated test suites, what each one covers, and how to run them.
-
 ---
 
-## Prerequisites
-- Node.js 18+ and npm
+## Testing Guide
+
+### Prerequisites
 - Rust (stable toolchain via rustup)
 - Go 1.22+
+- Node.js 18+ and npm
 - For mobile runtime checks: Expo CLI, Android Studio and/or Xcode (macOS).
 
----
+### Test Matrix
 
-## Test Matrix
-- **Rust core** (`oss/crypto-core`):
-  - `test_vault_lifecycle_transient`: Creates vault, signs transiently, restores from blob.
-  - `test_wrong_password`: Verifies `InvalidPassword` on incorrect credentials.
-  - `test_corrupted_nonce_length`: Verifies `CorruptedVault` on tampered nonce.
-  - `test_kem_flow_via_vault`: Validates KEM encapsulation/decapsulation via Vault.
-  - `interop_tests` (gated/disabled): Generates vectors for Go verification; currently disabled pending encoding/spec alignment between Rust and Go PQC libraries.
+**Rust core** (`oss/crypto-core`) — 21 tests:
 
-- **Go backend** (`proprietary/backend`):
-  - `ValidSignature`, `InvalidSignature`, `WrongMessage`, `InvalidPublicKeyFormat`: Signature verification tests.
-  - `TestReplayProtection`: Protocol-level test demonstrating challenge-response replay protection.
-  - `TestHealthEndpoint`, `TestVerifyEndpoint`: API integration tests.
+| Category | Tests |
+|----------|-------|
+| Vault | `test_vault_lifecycle_transient`, `test_wrong_password`, `test_corrupted_nonce_length` |
+| KEM | `test_kem_flow_via_vault` |
+| ZK Circuits | `test_age_circuit_satisfiable_adult`, `test_age_circuit_exactly_at_threshold`, `test_age_circuit_rejects_minor`, `test_age_circuit_rejects_one_year_short`, `test_range_circuit_in_bounds`, `test_range_circuit_at_bounds`, `test_range_circuit_rejects_below_min`, `test_range_circuit_rejects_above_max`, `test_range_circuit_rejects_far_out_of_range`, `test_range_circuit_single_value_range` |
+| ZK Prover | `test_age_proof_generation_and_verification`, `test_age_proof_exactly_at_threshold`, `test_range_proof_valid`, `test_range_proof_at_bounds`, `test_proof_serialization_roundtrip`, `test_vk_export` |
+| ZK Verifier | `test_verifier_with_exported_key` |
+| Interop (ignored) | `generate_interop_vectors`, `generate_zk_interop_vectors` |
 
-- **Mobile client** (`oss/client-mobile`):
-  - `createVault`, `getPublicKey`, `signChallenge`: Native bridge mocks.
+**Go backend** (`proprietary/backend`):
+- `ValidSignature`, `InvalidSignature`, `WrongMessage`, `InvalidPublicKeyFormat`: Signature verification tests.
+- `TestReplayProtection`: Protocol-level test demonstrating challenge-response replay protection.
+- `TestHealthEndpoint`, `TestVerifyEndpoint_Success`, `TestVerifyEndpoint_InvalidSignature`: API integration tests.
 
----
+**Mobile client** (`oss/client-mobile`) — 5 tests:
+- `createVault`, `getPublicKey`, `signChallenge`, `exportBlob`, `restoreVault`: Native bridge mocks with async/await.
 
-## How to Run Automated Tests
+### How to Run
 
-### 1) Rust crypto core
 ```bash
+# Rust crypto core (21 tests)
 cd oss/crypto-core
 cargo test
-```
-Last run: ✅ `4 passed, 1 ignored` (warnings: none).
 
-To run the ignored interop vector generation test:
-```bash
-cargo test generate_interop_vectors -- --ignored
-```
-Last run: ✅ `1 passed`.
-
-### 2) Go backend
-```bash
+# Go backend
 cd proprietary/backend
 go test ./...
-```
-Last run: ✅ `ok`.
 
-### 3) Mobile client unit tests (Jest)
-```bash
+# Mobile client (Jest)
 cd oss/client-mobile
 npm install
 npm test
 ```
-Last run: ✅ `1 passed` (3 tests).
 
----
-
-## Troubleshooting
+### Troubleshooting
 - If Rust tests fail to compile, ensure `rustup update` has installed the stable toolchain.
 - If Go tests cannot find modules, run `go mod tidy` inside `proprietary/backend`.
 - For mobile tests, clear Jest cache with `npm test -- --clearCache` if mocks are stale.
 
-## 📜 License
+---
+
+## Security Properties
+
+### Vault (PQC)
+- Keys are encrypted at rest using XChaCha20-Poly1305 with an Argon2id-derived KEK.
+- AAD (`OmniAuth-VaultBlob-v1`) binds the vault version to the ciphertext, preventing downgrade attacks.
+- Private keys are decrypted only transiently and never returned to the caller.
+
+### ZK Circuits
+- **Soundness**: All inequality constraints use bit decomposition (64-bit) to prevent finite-field wrap-around. A prover cannot forge a proof for an out-of-range value.
+- **Zero-Knowledge**: Private witnesses (birth date, secret value) are never included in public inputs.
+- **Trusted Setup**: Current implementation uses per-instance `circuit_specific_setup`. Production deployment requires a proper Powers of Tau ceremony.
+
+### Replay Protection
+- The Go backend demonstrates challenge-response replay protection using single-use nonce consumption.
+
+---
+
+## License
 - **OSS Components**: GNU AGPL v3.0 (See [LICENSE](LICENSE)). Copyright (c) 2025 Saurav Shriwastav.
 - **Proprietary Components**: Proprietary License (See [LICENSE-PROPRIETARY](LICENSE-PROPRIETARY)). All Rights Reserved.
 
-## 🗺️ Roadmap
-- Enable interop tests after FIPS library alignment.
+## Roadmap
+- Enable Rust-to-Go interop tests after FIPS library encoding alignment.
 - NIST selected HQC in March 2025 as a backup encryption algorithm to ML-KEM; consider integration.
-
-
-COMING UP
-3.New cryptographic construction (hard, PhD-level)
-2. Formal proof of security (Tamarin, ProVerif)
-1. Solving an unsolved practical problem (key rotation at scale, threshold PQC)
+- Formal proof of security (Tamarin, ProVerif) for the challenge-response protocol.
+- Threshold PQC (t-of-n Dilithium signing) for key rotation and social recovery.
+- Publish `omniauth_core` crate to crates.io after security audit.
