@@ -1,0 +1,21 @@
+---
+description: Measurement, benchmark, and evaluation rules for paper-grade evidence
+alwaysApply: true
+---
+
+# Benchmarks
+
+- A milestone is not "done" for the paper until it has at least one repeatable benchmark with a recorded number, an environment description, and a date.
+- Maintain `docs/benchmarks.md` as the single index. Each entry: name, what it measures, command to run, last result, hardware, OS, Rust toolchain (or Go / Node version), date.
+- Required minimum benchmarks per phase:
+  - Phase 0 (foundation): ML-KEM-768 keygen / encaps / decaps timing, ML-DSA-65 keygen / sign / verify timing, vault open / close round-trip, ZK age proof gen / verify, ZK range proof gen / verify, proof serialization size.
+  - Phase 1 (threshold PQC): t-of-n key share generation cost, partial sign cost, threshold verify cost.
+  - Phase 2 (liveness / behavioral): false accept / reject baselines on a fixed benchmark dataset, latency budget for a continuous-auth tick.
+  - Phase 3 (decentralization): MPC fragment unlock latency, social recovery end-to-end latency.
+  - Phase 4 (universal client): browser extension cold start, OS daemon idle cost, intercept-to-prove latency for a stub login.
+  - Phase 5 (proof / paper): all benchmarks above re-run with final parameters.
+- Use `criterion` for Rust, Go's `testing.B` benchmarks for the verifier, and a reproducible Jest or Detox harness for mobile. Single-shot timings without warmup are not benchmarks.
+- Record at least one figure-quality plot per phase under `docs/research/figures/` for the paper, with the script that produced it checked in.
+- Never paste benchmark numbers into the paper without a corresponding entry in `docs/benchmarks.md`.
+- Re-run benchmarks before a release tag, before paper submission, and after any change that touches PQC parameters, ZK circuits, vault layout, or interop encodings.
+- If a benchmark regresses by more than 20%, stop the run, investigate, and record the cause in `docs/research/research-log.md`.

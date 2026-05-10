@@ -1,0 +1,17 @@
+---
+description: Regulatory and compliance posture for PQC identity products
+alwaysApply: true
+---
+
+# Compliance And Regulation
+
+- OmniAuth's commercial wedge is regulated industries that need PQC migration on a deadline. Compliance posture must be designed in.
+- Maintain `docs/compliance.md` as the index of regulations and procurement standards the product must respect: NIST FIPS 203 / 204 / 205, CISA PQC procurement advisory (January 2026), CNSA 2.0 (January 2027 for new National Security System acquisitions), eIDAS 2.0 (EU digital identity), GDPR (EU 2016/679), NIS-2 (EU 2022/2555), ISO/IEC 27001 alignment, SOC 2 readiness, and HIPAA when health data is in scope.
+- Every user-visible data flow needs a row in `docs/compliance.md` with: data category, lawful basis, location of processing, retention rule, deletion mechanism, and which component (Rust core, Go backend, mobile client) holds it.
+- Personal data on the Go backend should be minimized to ciphertext, public keys, OPAQUE-style records, signed challenges, and operational telemetry. Any new personal field requires a written justification.
+- The backend must support data export and account erasure flows that produce verifiable receipts. Cryptographic non-erasability of decrypted past secrets is documented honestly.
+- Logs, telemetry, and crash reports may not contain plaintext, key material, signatures past their useful lifetime, ZK witnesses, or recovery material.
+- Self-hosting and on-prem appliance modes must be first-class. Document data residency choices and operator responsibilities.
+- Subprocessors and third-party services (Postgres host, S3-compatible storage, email, monitoring, mobile push) must be listed in `docs/compliance.md` with purpose, region, and DPA status before they are added.
+- Stop and ask before adding analytics SDKs, error trackers, marketing pixels, or any third-party network call from the mobile client or any verifier endpoint.
+- Before any beta release, run a regulatory checklist pass and record the result. Before any paid release, require an external compliance review.

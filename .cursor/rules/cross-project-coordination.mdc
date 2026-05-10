@@ -1,0 +1,16 @@
+---
+description: OmniAuth and MyPassword coordination, PhD spine reminder, hard stop points
+alwaysApply: true
+---
+
+# Cross Project Coordination
+
+- OmniAuth and MyPassword (`../MyPassword`) share one PhD spine: local-first encrypted vaults, OPAQUE-style authentication, recovery ceremonies, and metadata minimization. OmniAuth is the higher-novelty PhD anchor (PQC + ZK + threshold + formal verification). Treat them as siblings, not unrelated repos.
+- Read MyPassword's `RULES.md`, `plan.md`, and `docs/progress.md` before claiming a design is novel or before changing a shared crypto pattern (vault format, AAD schema, KEK derivation, OPAQUE flow, recovery model).
+- The user's working agreement: MyPassword is finished through Phase 3 (desktop) before deep OmniAuth Phase 1+ work. After MyPassword Phase 3 ships, OmniAuth becomes the primary track. Do not let OmniAuth stall while MyPassword features beyond Phase 3 are added.
+- At every phase boundary in OmniAuth, restate to the user: "MyPassword shares vault patterns with this work. Should we sync the sibling design or record a divergence?" Wait for an answer.
+- When introducing a new vault format, AAD field, KDF parameter, KEM construction, or recovery primitive, check `../MyPassword/core/src/lib.rs` and `../MyPassword/docs/specs/` for an existing analogue. Either reuse the design or record the divergence in `docs/research/decisions-rejected.md` with reasoning.
+- The sibling-aware paper plan: OmniAuth's paper covers PQC identity vault + ZK claims + threshold recovery + formal model. MyPassword's paper covers hybrid relay + recovery + offboarding for SMB. Avoid claim overlap; cite the sibling work explicitly in related work.
+- If a benchmark, formal model, or rejected design from MyPassword contradicts an OmniAuth decision, stop and ask before proceeding. Do not silently diverge.
+- The autonomous `let's do` loop must surface this rule at the start of every run by stating: current OmniAuth phase, MyPassword sibling status, and whether a coordination check applies.
+- Never claim "PhD-ready" for OmniAuth alone if it conflicts with MyPassword's record. The thesis spine is shared.

@@ -1,0 +1,18 @@
+---
+description: Memory hygiene rules for secrets, keys, witnesses, and plaintext buffers
+globs: "**/*.rs,**/*.go,**/*.ts,**/*.tsx,**/*.kt,**/*.swift"
+alwaysApply: false
+---
+
+# Memory Hygiene
+
+- Wrap all secret bytes in types that zero on drop where the language allows: `zeroize::Zeroizing<Vec<u8>>` and `secrecy::SecretBox` in Rust; minimum live time and explicit overwrite in Go; opaque handles in TypeScript / Kotlin / Swift that never expose raw bytes.
+- Master passwords, KEKs, vault keys, ML-DSA secret keys, ML-KEM secret keys, ZK witnesses, recovery shares, and decapsulated shared secrets must never be held in a plain `Vec<u8>` / `[]byte` / `string`.
+- Forbid `Debug`, `Display`, `Serialize`, and `Clone` on Rust secret-bearing types unless the implementation is redacted or zeroize-aware. Provide an explicit `expose()` only in narrow call sites.
+- Secrets must not flow through `format!`, `println!`, `dbg!`, `tracing` fields, panic messages, `Result::Err` payloads, Go's `fmt.Printf`, JS `console.log`, native `Log.d`, or `os_log`.
+- Constant-time comparison for any equality on secret material: `subtle::ConstantTimeEq` in Rust, `crypto/subtle.ConstantTimeCompare` in Go.
+- Drop secrets at the earliest possible scope. There is no long-lived `Identity` object exposed via FFI; each operation re-decrypts under the password.
+- Verify zeroization with at least one negative test in Rust per crate that asserts the `Zeroize` trait is implemented for the secret type, or scans dropped allocator slot patterns where feasible.
+- Upstream `pqcrypto` key types are known to not fully zeroize on drop. Wrap returned key material in `Zeroizing` immediately and document the upstream gap in the same module.
+- Mobile: do not let secrets enter React state, AsyncStorage, MMKV, or unencrypted files. Native bridges return opaque handles; the password is passed in for each operation.
+- Stop and ask before adding any dependency that takes secrets by value without a zeroize story.

@@ -1,0 +1,17 @@
+---
+description: Explicit paper-writing milestones tied to product phases
+alwaysApply: true
+---
+
+# Paper Milestones
+
+- The paper at `docs/research/paper.md` evolves alongside the implementation. Each product phase has a binding paper deliverable that must be done before the phase is marked complete in `docs/progress.md`.
+- Phase 0 (foundation): related-work section drafted with at least 12 citations in `docs/research/references.bib`; threat model section matches the comment block in `oss/crypto-core/src/lib.rs`; primitives table lists every chosen crate / library with version, source, and FIPS / RFC alignment.
+- Phase 1 (threshold PQC): protocol section is written with message diagrams; threshold scheme choice justified against alternatives; one benchmark figure included; one formal model entry referenced.
+- Phase 2 (liveness / behavioral): behavioral signal taxonomy; honest false-accept / false-reject baseline figure; privacy section addressing biometric template risks (or their absence via fuzzy extractors).
+- Phase 3 (decentralization): social recovery design figure; MPC escrow protocol section; recoverability under adversarial guardian models analyzed.
+- Phase 4 (universal client): browser extension threat model; OS daemon trust boundary; intercept-and-prove flow figure.
+- Phase 5 (proof / paper): full evaluation section with measured numbers tied to `docs/benchmarks.md`; full formal model results referenced; limitations section honest; ethics section addresses biometric, MPC, and recovery social dynamics.
+- Before any submission: every claim has a citation or a referenced experiment, `docs/research/decisions-rejected.md` is up to date, and the sibling MyPassword work is cited where claims overlap.
+- Pick the target venue early and record it in `docs/research/paper.md` (USENIX Security, NDSS, CCS, IEEE S&P, PoPETs, ACM ASIACCS, or a clearly named alternative). Track the next submission deadline in the same file.
+- Do not write paper prose that contradicts the code. If the code changes a protocol, update the paper in the same milestone or stop and ask.

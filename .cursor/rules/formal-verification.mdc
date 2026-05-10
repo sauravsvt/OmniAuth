@@ -1,0 +1,17 @@
+---
+description: Triggers and discipline for formal protocol modeling
+alwaysApply: true
+---
+
+# Formal Verification
+
+- Any protocol with more than two message exchanges, server-side state, or claimed forward secrecy / replay resistance / key compromise impersonation resistance must have a formal model written before it is shipped to beta users or claimed in the paper.
+- Default tools: Tamarin Prover for trace properties (secrecy, authentication, freshness, replay) and ProVerif for equational reasoning when symbolic limits of Tamarin become awkward.
+- Models live under `docs/research/formal/` with one folder per protocol (e.g., `challenge-response-v1/`, `threshold-sign-v1/`, `social-recovery-v1/`, `mpc-escrow-v1/`).
+- Each model folder contains: `model.spthy` (or `.pv`), `properties.md` mapping each property to a paper claim, `results.md` with last-run output and date, and a `Makefile` or `run.sh` that reproduces the run.
+- Required properties for the OmniAuth challenge-response flow: secrecy of master password, secrecy of ML-DSA secret key, mutual authentication after verification, replay rejection of every signed challenge, freshness binding to a server nonce, KCI resistance, identity binding for relying parties.
+- Required properties for threshold PQC and recovery: secrecy of any single share, threshold soundness (no t-1 coalition succeeds), recoverability with t honest participants, no escrow leak.
+- A milestone that introduces a new protocol message, new authority transition, or new key derivation cannot be marked complete in `docs/progress.md` until the model is updated and re-run.
+- The paper may not claim "we prove" anything that is not in `properties.md` with a passing run.
+- If Tamarin/ProVerif cannot express a property (e.g., probabilistic ZK or time-bounded liveness), write a hand proof sketch in `properties.md` and label it as unverified-by-tool.
+- Stop and ask before designing a protocol step that is hard to model symbolically.

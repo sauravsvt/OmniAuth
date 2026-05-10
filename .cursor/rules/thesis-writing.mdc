@@ -1,0 +1,18 @@
+---
+description: Discipline for writing the publishable paper and thesis chapter
+alwaysApply: true
+---
+
+# Thesis Writing
+
+- The publishable paper at `docs/research/paper.md` and the thesis chapter derived from it are first-class deliverables. They evolve every milestone.
+- Every code change that affects a protocol, security guarantee, evaluation result, or design decision triggers a paper update in the same milestone. Code without a paper update is incomplete.
+- Maintain a single source of truth for citations in `docs/research/references.bib` using BibTeX keys cited in `paper.md` (e.g., `[@fips203]`, `[@fips204]`, `[@groth16]`). Never inline a URL in the paper without a corresponding bib entry.
+- Section discipline: abstract, introduction, threat model, related work, design, implementation, evaluation, formal analysis, limitations, ethics, conclusion, references. Optional: appendix with formal models, benchmarks, interop vectors, reproducibility instructions.
+- Writing voice: precise, evidence-backed, no marketing words. Forbidden phrases: "revolutionary", "the only", "proven secure", "guaranteed", "military-grade", "quantum-proof". Use measurable claims with citations or experiments. PQC reduces risk, it does not eliminate it.
+- Distinguish four claim categories explicitly: shipped result with measurement, prototype with limitation, hypothesis to validate, future work. Mislabeling is a stop-and-ask trigger.
+- Related work must compare against current systems by name and version: FIDO2 / WebAuthn (post-quantum status), passkey ecosystem, OPAQUE, Signal PQXDH, hybrid PQC-TLS rollouts, decentralized identity work (DID, VC), ZK identity work (zk-creds, etc.).
+- Reproducibility appendix is required: exact commit, toolchain version, OS, hardware, commands to rebuild every figure and table, interop vector hashes. If a number cannot be reproduced from the appendix, it does not appear in the paper.
+- Target venue is recorded in `paper.md`: USENIX Security, NDSS, CCS, IEEE S&P, PoPETs, ACM ASIACCS, or a clearly named alternative with deadline. Track the next deadline and weeks remaining in `docs/progress.md`.
+- Thesis chapter assembly: the chapter is a superset of the paper plus the rejected designs from `docs/research/decisions-rejected.md`, the formal models under `docs/research/formal/`, the ZK setup artifacts from `docs/research/zk-setup/`, and the benchmark catalog from `docs/benchmarks.md`.
+- Stop and ask before submitting any draft externally (preprint, workshop, conference). External submission requires explicit user approval and an audit trigger check.

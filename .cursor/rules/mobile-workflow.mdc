@@ -1,0 +1,17 @@
+---
+description: Mobile client workflow for React Native, UniFFI, Kotlin, Swift
+globs: "**/*.ts,**/*.tsx,**/*.kt,**/*.swift,**/package.json,**/app.json,**/app.config.*"
+alwaysApply: false
+---
+
+# Mobile Workflow
+
+- The mobile reference client lives in `oss/client-mobile`. It is a vault-based architecture: password is required for every cryptographic operation; there is no long-lived unlocked state.
+- React Native (Expo) + UniFFI bridge + Rust core. TypeScript layer must never hold raw private key bytes; only handles, opaque blobs, and base64-encoded public material.
+- Master passwords and unlocked secret material must not be stored on disk in plaintext, must not flow through React state outside the immediate signing call, and must not be logged or sent to any analytics or crash service.
+- Optional platform-backed storage (Android KeyStore, iOS Keychain, Secure Enclave) is used for the encrypted vault blob, not for raw secrets. Document the storage choice per platform in `docs/`.
+- Permissions: minimal. Camera, biometrics, network, and storage permissions each require a written justification in `docs/`. Stop and ask before adding any new permission.
+- Run `npm test` (Jest) before commits. UniFFI binding changes require a focused test that exercises the new shape end-to-end with a mocked or real native bridge.
+- The dev backend URL switching (`10.0.2.2` for Android emulator, `localhost` for iOS) must be controlled by environment variables or a typed config, not by hardcoded strings in screens.
+- Before any release build, scan for hardcoded URLs, hardcoded test passwords, debug `console.log`s, and stale UniFFI bindings.
+- Stop and ask before integrating a third-party authentication SDK, push notification service, or analytics SDK that touches the vault flow.

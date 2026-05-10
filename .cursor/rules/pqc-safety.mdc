@@ -1,0 +1,18 @@
+---
+description: Post-quantum cryptography safety rules for OmniAuth
+alwaysApply: true
+---
+
+# PQC Safety
+
+- All identity-sensitive operations (sign, decapsulate, derive, recover) happen client-side. The Go backend verifies, persists ciphertext / public keys / OPAQUE-style records / challenges, and orchestrates flows. It must never see private keys, master passwords, or ZK witnesses.
+- Use NIST-finalized PQC parameter sets: ML-KEM-768 (FIPS 203) and ML-DSA-65 (FIPS 204). Track NIST FIPS 205 (SLH-DSA) and HQC (selected March 2025 as backup KEM) as candidate alternates with explicit decisions in `docs/research/decision-research.md` before adopting.
+- Until ML-KEM and ML-DSA stacks have wider audit coverage, prefer hybrid modes where practical: classical X25519 / Ed25519 alongside PQC for KEM and signatures, combined via standards-aligned constructions (CFRG hybrid drafts, IETF PQC-in-TLS where applicable). Document the hybrid choice and its security argument.
+- Production crypto in `oss/crypto-core` must use audited or NIST-aligned crates. Never roll PQC primitives.
+- Vault format is versioned with explicit AAD strings (e.g., `OmniAuth-VaultBlob-v1`). Any change to the AAD, KDF parameters, or ciphertext layout bumps the version and is recorded in `docs/specs/`.
+- Master passwords, KEKs, vault keys, ML-DSA secret keys, ML-KEM secret keys, ZK witnesses, and recovery shares must never be logged, persisted unencrypted, or sent over the network.
+- Decryption of identity material happens transiently. There is no long-lived `Identity` object exposed via FFI. Each crypto operation re-decrypts under the password.
+- Constant-time discipline: equality on secrets uses `subtle::ConstantTimeEq`. Errors do not branch on secret-dependent paths.
+- Replay protection on the wire: every signed challenge is single-use and bound to a server-generated nonce, a TTL, and the verifier's identity. The Go backend's challenge store enforces single-consumption.
+- Never add a password reset flow that bypasses cryptography. Recovery is an explicit client-side ceremony (threshold PQC, social recovery guardians, or MPC fragments).
+- Stop and ask before adopting any pre-final NIST candidate, before depending on a PQC crate that is unmaintained or pre-1.0 in production, or before claiming forward secrecy without a formal model.

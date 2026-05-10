@@ -1,0 +1,20 @@
+---
+description: When to seek external cryptographic and security audits
+alwaysApply: true
+---
+
+# Audit Trigger
+
+- External audits are mandatory at specific points. They are not optional and not replaced by internal review.
+- Required audits, in order:
+  - Protocol design review by an external applied cryptographer before any flow that crosses Rust → Go interop ships to a non-developer user.
+  - Implementation audit of `oss/crypto-core` before publishing to crates.io or tagging `v0.1.0`.
+  - ZK circuit and trusted-setup ceremony review before publishing fixed verifying keys for relying parties.
+  - Mobile audit before any production release, scoped to UniFFI bridge, native key storage, permissions, and bridge-side memory hygiene.
+  - Backend audit before any production deployment, scoped to verifier correctness, replay protection, log hygiene, and DB access control.
+  - Re-audit after any change that alters a wire format, KDF, AAD, ZK circuit, threshold scheme, or recovery semantics.
+- Maintain `docs/audits.md` listing each audit: scope, auditor, date, report location, severity-classified findings, fix status, and re-test date.
+- Critical and high findings block the release. Medium findings require a documented remediation plan. Low findings require a tracked issue.
+- Before paper submission, the implementation audit results must be referenced in the limitations or evaluation section, including the audit date and scope.
+- Pre-audit hardening: clean clippy / vet / lint, no `unsafe` in Rust without justification, dependency tree reviewed against RustSec / Go vulncheck / npm audit, fuzz harnesses for serialization and AAD parsing, threat model up to date in `oss/crypto-core/src/lib.rs` and `docs/research/paper.md`.
+- Stop and ask before shipping a feature that crosses an audit trigger without the audit being scheduled.

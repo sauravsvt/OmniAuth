@@ -1,0 +1,26 @@
+---
+description: Automation workflow when the user says "let's start"
+alwaysApply: true
+---
+
+# Start Command
+
+When the user says "let's start", "start", "continue the build", or asks to proceed without a narrower task:
+
+1. Read project docs first: `RULES.md`, `plan.md`, `docs/start-workflow.md`, `docs/engineering-principles.md`, `docs/quality-gates.md`, `docs/progress.md`, `docs/research/research-log.md`, `docs/research/paper.md`, and `project_backlog.md`. Skim `2.0.md` only when strategic vision is relevant; treat it as inspiration, not commitment.
+2. Read the sibling-coordination rule. If MyPassword (`../MyPassword`) is past Phase 3 without an explicit OmniAuth decision, surface the cross-project check before coding.
+3. Identify the current phase and next incomplete milestone from `docs/progress.md`.
+4. Before coding, state the phase guarantee, non-guarantees, crate/version choices, tests to write first, latest research needed (NIST, FIPS, IETF, CFRG, arkworks, CIRCL, `pqcrypto-*`), and silent security failure risks.
+5. Research current official sources before any dependency, protocol, PQC parameter, ZK circuit, mobile permission, or paper claim.
+6. Work in this loop until blocked or the requested milestone is complete: research, write/update tests (Rust + Go + mobile where relevant), implement, update docs/paper notes, apply quality gates, run checks/builds, update `docs/progress.md`, report percent complete.
+7. Stop after one milestone by default unless the user says `let's do`.
+8. Do not skip phases. Do not enable a feature whose interop is blocked (Rust/Go signature alignment, ZK Go-side verification) without first closing the interop gap or recording the limitation.
+9. Check for overengineering before edits: if a simpler phase-aligned design works, use it.
+10. If blocked by missing credentials, system packages, unclear product choice, security trade-off, scope expansion, or sibling-coordination conflict, stop and ask a focused question.
+
+When the user says `let's do`, enter full safe automation mode:
+
+1. Treat `let's do` as explicit opt-in for autonomous branch/commit/merge cleanup for this run.
+2. Continue milestone-by-milestone across phases, not just one milestone, until a safety stop condition, external blocker, or major product decision is reached.
+3. After each milestone, run gates, commit on a focused branch, merge if checks pass, clean up, update docs/progress, then continue to the next milestone.
+4. Still stop for secrets risk, failing checks that require scope expansion, security trade-offs, protected branch uncertainty, missing credentials, deployment targets, sibling-coordination conflicts, or any action that would rewrite shared history.

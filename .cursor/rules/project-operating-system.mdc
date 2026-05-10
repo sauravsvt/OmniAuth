@@ -1,0 +1,15 @@
+---
+description: Always-on operating rules for OmniAuth project sessions
+alwaysApply: true
+---
+
+# Project Operating System
+
+- Treat OmniAuth as a post-quantum identity and authentication platform built around an encrypted PQC vault, transient secrets, ZK identity claims, and a verifying backend. The mobile client and the Go backend are reference implementations; the Rust crypto core is the audit-ready trust layer.
+- Before substantial coding, restate the phase, security guarantee, non-guarantees, chosen crates with versions (Rust + Go + mobile), tests to write first, and silent-failure risks.
+- Production crypto in `oss/crypto-core` must use audited or NIST-aligned crates: `pqcrypto-mlkem` / `pqcrypto-dilithium` (or successors), `chacha20poly1305`, `argon2`, `hkdf`, `zeroize`, `subtle`, `arkworks-rs` for ZK. Never implement PQC primitives by hand for production.
+- The Go backend (`proprietary/backend`) uses Cloudflare CIRCL for verification today; treat any Rust↔Go signature interop as a first-class correctness problem, not an afterthought.
+- ZK trusted setup must move from per-instance to a Powers-of-Tau ceremony before publishing fixed verifying keys.
+- Use boring, auditable architecture over wild manifesto features when the two conflict. `2.0.md` is direction; phase order is binding.
+- Never claim the system is proven secure. State the exact guarantees, the assumptions they rely on, and the specific FIPS / RFC / draft they are aligned to.
+- Sibling project: MyPassword (`../MyPassword`) shares vault patterns, OPAQUE shape, and recovery framing. Reuse designs across projects unless a divergence is recorded.

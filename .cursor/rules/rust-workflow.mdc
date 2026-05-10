@@ -1,0 +1,16 @@
+---
+description: Rust workspace workflow and quality gates for crypto-core
+globs: "**/*.rs,**/Cargo.toml"
+alwaysApply: false
+---
+
+# Rust Workflow
+
+- Use the latest stable Rust toolchain unless a crate or target requires otherwise. UniFFI bindings dictate the minimum version when active.
+- Prefer `cargo add` for new dependencies so versions come from the registry instead of guesses.
+- Write tests before implementation for ZK circuits, PQC vault behavior, and cross-language interop vectors.
+- Run `cargo fmt --all` and `cargo test` inside `oss/crypto-core` after substantive Rust changes.
+- For production code, add `cargo clippy --all-targets -D warnings` once the clippy component is installed.
+- Keep `oss/crypto-core` independent from any unaudited helper crates. Production crypto must use audited or NIST-aligned crates only.
+- Regenerate UniFFI bindings (Kotlin/Swift) in the same milestone that changes the Rust API, and run mobile tests to confirm the bridge.
+- When a Rust-side change touches the wire shape with the Go backend, regenerate or update interop vectors and re-run Go tests.

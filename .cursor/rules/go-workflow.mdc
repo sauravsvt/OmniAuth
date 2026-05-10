@@ -1,0 +1,20 @@
+---
+description: Go backend workflow for verifier, worker, and orchestration
+globs: "**/*.go,**/go.mod,**/go.sum"
+alwaysApply: false
+---
+
+# Go Workflow
+
+- The Go backend lives in `proprietary/backend`. It verifies, orchestrates, and persists. It must never hold long-lived private key material on behalf of users.
+- Use the latest stable Go (1.22+). Pin via `go.mod` and run `go mod tidy` before commits.
+- Prefer Cloudflare CIRCL for PQC verification today. Track upstream changes when NIST-aligned successors land.
+- Run `go test ./...` and `go vet ./...` before commits. Add `golangci-lint` once configured.
+- Every API handler that consumes signatures, KEM ciphertexts, or ZK proofs must be exercised by:
+  - A unit test with a CIRCL-generated artifact for happy path.
+  - A unit test with a tampered artifact for failure path.
+  - An end-to-end test with a Rust-generated interop vector when the interop boundary is unblocked.
+- Replay protection for any challenge-bearing endpoint is mandatory. The challenge store is single-use, TTL-bounded, and tested for replay rejection.
+- Postgres schema changes go through `db/schema.sql` with a paired migration plan in `docs/specs/` (or equivalent) before code rolls out.
+- Logs must not contain plaintext credentials, signatures past their useful lifetime, raw public keys for unrelated users, or stack traces with secret inputs.
+- Stop and ask before adding a third-party SaaS dependency in the verification path, or before changing the wire shape of `/api/v1/verify`.

@@ -1,0 +1,18 @@
+---
+description: Testing, build, CI, and deployment quality gates
+alwaysApply: true
+---
+
+# Testing, Build, And Deployment
+
+- Tests are part of the milestone, not a follow-up. Write test stubs first for security-sensitive behavior in any of Rust, Go, or mobile.
+- Minimum gate after code changes:
+  - Rust: `cargo fmt --all`, `cargo test` in `oss/crypto-core`, `cargo clippy --all-targets`.
+  - Go: `go test ./...` and `go vet ./...` in `proprietary/backend`.
+  - Mobile: `npm install` then `npm test` in `oss/client-mobile`.
+- Add deeper tests when risk increases: NIST KAT vectors for ML-KEM and ML-DSA, ZK soundness negative tests, AAD binding round trips, replay rejection, interop vectors, mobile bridge end-to-end tests.
+- Builds must be reproducible from documented commands. Pin dependencies through lockfiles and document system prerequisites.
+- Do not deploy or package before secrets handling, logging, telemetry, and crash reports are reviewed for plaintext leakage on every component (Rust, Go, mobile).
+- Deployment should be staged: local dev, test fixtures, CI, signed release artifacts, then production. No direct jump to production.
+- Any networked service must include health checks, structured non-secret logs, config validation, and a rollback plan before release.
+- The Docker stack at `docker-compose.yml` is currently a placeholder. Stop and ask before deploying a real stack until Postgres, the worker, and the verifier are wired together with secrets handled outside the repo.

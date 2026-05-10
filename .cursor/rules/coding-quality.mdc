@@ -1,0 +1,19 @@
+---
+description: High-quality coding standards complementing engineering-principles
+alwaysApply: true
+---
+
+# Coding Quality
+
+- Production code must be readable in one pass by a reviewer unfamiliar with the file. Prefer clarity over cleverness in security-sensitive paths across Rust, Go, and TypeScript.
+- Naming: use full domain words (`vault_blob`, `kek`, `aad`, `challenge`, `nonce`, `verifying_key`, `proving_key`, `share_index`), not abbreviations invented locally. Match the spec at `docs/specs/` when one exists.
+- Functions: one responsibility, explicit inputs, explicit outputs, no hidden I/O, no hidden global state. A function that touches the network, the disk, or a clock must say so in its name or be wrapped in a typed boundary.
+- Types: prefer newtypes for IDs, versions, epochs, algorithm suite tags, share indices, and serialized protocol objects. Avoid `String` / `Vec<u8>` / `[]byte` / `string` at security boundaries; wrap them.
+- Error handling: in Rust use `thiserror` enums with one variant per real failure mode; do not leak `anyhow` into public APIs of `oss/crypto-core`. In Go, return typed errors; do not wrap secret values into error strings. In TypeScript, surface coarse error categories to the UI; never expose raw native error messages from UniFFI.
+- Comments: explain invariants, security assumptions, and non-obvious trade-offs. Do not narrate code. Do not explain what changed in a diff via comments.
+- Tests: one focused test per behavior, including negative paths. Use property tests for parsers, serializers, AAD binding, and ZK circuits. Use NIST KAT vectors for ML-KEM and ML-DSA where available. Use deterministic seeds for randomness.
+- Concurrency: in Rust avoid shared mutable state, document `Mutex`/`RwLock` lock orders. In Go, avoid leaking goroutines, document context cancellation paths.
+- Dependencies: minimum viable set. Every new dependency requires a research-freshness check, a license check, a maintenance check, and a security-advisory check across the relevant ecosystem (RustSec, govulncheck, npm audit). Lock files are committed.
+- Lints: Rust must be clean under `cargo fmt --all`, `cargo clippy --all-targets -D warnings`. Go must pass `go vet ./...` and ideally `golangci-lint`. Mobile must pass `tsc` and `npm test`. New `#[allow(...)]` requires a justification comment.
+- Public APIs: changes to public types, function signatures, serialized formats, or trait bounds in `oss/crypto-core` require a versioning note in `docs/specs/` and a paper-milestones check.
+- Stop and ask before adding `unsafe` in Rust, before introducing a new FFI surface, before depending on a crate / module that is unmaintained or pre-1.0 in a security-critical path, or before changing a wire format.

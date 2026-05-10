@@ -1,0 +1,15 @@
+---
+description: Product and user-experience quality rules
+alwaysApply: true
+---
+
+# Product UX
+
+- Design for calm, trustworthy flows. PQC identity UX must feel deliberate, not flashy. The user should always understand what is being proven, to whom, and what is not being revealed.
+- Never hide security trade-offs. Explain recovery, key rotation, biometric unlock, ZK claim disclosure, and challenge-response failures honestly.
+- Prefer safe defaults: locked by default, minimal permissions, explicit disclosure for any ZK claim, clear destructive confirmations for vault wipe and key rotation.
+- Minimize user decisions during normal authentication. Require deliberate ceremony for recovery, key rotation, share regeneration, and adding a new relying party.
+- Error messages must be useful without leaking secrets, signature bytes, vault IDs that aid linkability, witness data, or recovery material.
+- The mobile client's "test signing" or any developer affordance must be hidden from production builds.
+- Every user-facing feature needs an empty state, loading state, error state, and recovery path before it is considered done.
+- Stop and ask before designing a UX that automatically discloses a ZK claim without explicit user approval per request, or before storing any unlocked material across app launches.

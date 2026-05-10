@@ -1,0 +1,16 @@
+---
+description: Cross-language interop for Rust core, Go backend, and mobile bindings
+alwaysApply: true
+---
+
+# Interop
+
+- OmniAuth spans Rust (`oss/crypto-core`), Go (`proprietary/backend`), TypeScript (`oss/client-mobile`), and Kotlin/Swift via UniFFI. Every cross-language boundary is a correctness and security risk and must be tested.
+- The current known-blocked interop is Rust-generated ML-DSA (Dilithium3) signatures verified by Cloudflare CIRCL on the Go side. This is recorded in `project_backlog.md`. Until interop vectors agree, do not ship a flow that crosses the boundary in production.
+- Maintain `oss/crypto-core/src/zk/interop.rs` and any sibling Rust modules so they emit signed test vectors covering: signature generation, signature verification, KEM encaps/decaps, vault open round-trip, ZK proof generation, and ZK proof verification. Vectors are checked in under `docs/research/interop-vectors/` with provenance.
+- Each cross-language vector has a Rust producer test and a Go consumer test (or a documented WASM bridge). A vector without a consumer test does not count.
+- Mobile bindings (UniFFI Kotlin/Swift) must mirror the Rust API exactly. When the Rust API changes, regenerate bindings in the same milestone and add a Jest/native test that exercises the new shape end-to-end.
+- Encoding rules: prefer canonical, length-prefixed, versioned encodings (CBOR, BCS, or explicit struct serialization with a documented schema). Do not rely on JSON ordering for cryptographic equality.
+- Time, randomness, and clock sources must not cross language boundaries silently. The producer of a challenge, nonce, or timestamp is named explicitly in the spec.
+- The Go backend's challenge store, replay protection, and verification path must be exercised by an end-to-end test that starts from a Rust-generated artifact, not from a Go-generated convenience artifact.
+- Stop and ask before shipping a feature that crosses a boundary without producer-and-consumer tests passing in CI.

@@ -1,0 +1,16 @@
+---
+description: Zero-knowledge proof discipline for OmniAuth identity claims
+alwaysApply: true
+---
+
+# ZK Discipline
+
+- ZK circuits live in `oss/crypto-core/src/zk/`. Production proofs use Groth16 on BN254 via arkworks-rs unless a documented decision in `docs/research/decision-research.md` chooses otherwise (e.g., PLONK, Halo2, STARK).
+- Every inequality constraint must be enforced with bit decomposition over a fixed bit-width (currently 64) to prevent finite-field wrap-around. Soundness tests verify rejection of out-of-range and edge values.
+- Public inputs are minimized. Private witnesses (birth date, secret value, salt, nonces) must never appear in public inputs. Negative tests check this for every circuit.
+- Trusted setup discipline: per-instance `circuit_specific_setup` is acceptable for development only. Before publishing any verifying key for production, run a Powers-of-Tau-aligned ceremony, record participants, transcripts, and verification, and store the resulting `pk` / `vk` artifacts under `docs/research/zk-setup/` with hashes.
+- Verifying keys exported for relying parties must be reproducible: include a script and a hash in `docs/research/zk-setup/`.
+- Cross-language verification is a first-class requirement when the backend or another verifier consumes proofs. The Go backend either embeds an arkworks-compatible verifier (via WASM bridge or native port) or the proof flow stays Rust-side. Do not silently rely on the Rust verifier in a multi-language deployment.
+- Performance budget: each proof generation and verification has an entry in `docs/benchmarks.md`. A circuit change that regresses prover time by more than 30% triggers a stop.
+- Privacy budget: the set of public inputs across circuits used by one user must not accidentally re-identify them. Document the linkability surface in `docs/research/paper.md`.
+- Stop and ask before adding a circuit that introduces new witness categories, before changing the proving scheme, or before integrating with a third-party verifier whose crypto stack is not audited.
