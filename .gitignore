@@ -1,12 +1,37 @@
+# =====================================================================
+# OmniAuth .gitignore
+# Audit hygiene: do not publish local IDE state, secrets, or build noise.
+# =====================================================================
+
 # General
 .DS_Store
 Thumbs.db
 *.log
+*.swp
+*.swo
+
+# Editors / IDEs (do not publish local state)
 .vscode/
 .idea/
-*.swp
+*.iml
+.vs/
+.history/
 
-# Rush/Monorepo
+# Cursor (rules ARE intentionally tracked under .cursor/rules/; leave that alone)
+# Anything else under .cursor/ that is local should be ignored explicitly here.
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+
+# Rush / Monorepo build noise
 .turbo/
 build/
 dist/
@@ -19,11 +44,30 @@ node_modules/
 # React Native (oss/client-mobile)
 /oss/client-mobile/node_modules/
 /oss/client-mobile/.expo/
+/oss/client-mobile/.expo-shared/
 /oss/client-mobile/ios/Pods/
+/oss/client-mobile/ios/build/
 /oss/client-mobile/android/app/build/
+/oss/client-mobile/android/.gradle/
+/oss/client-mobile/android/build/
+/oss/client-mobile/android/local.properties
 /oss/client-mobile/.env
 
 # Go (proprietary/backend)
 /proprietary/backend/bin/
 /proprietary/backend/vendor/
 *.exe
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Generated proving / verifying keys without provenance
+# (commit ZK setup artifacts only via docs/research/zk-setup/ with hashes)
+*.pk
+*.vk
+*.zkey
+*.ptau
