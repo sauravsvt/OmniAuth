@@ -4,7 +4,7 @@ const OmniAuthNative = requireNativeModule('OmniAuth');
 
 export class CryptoService {
     /**
-     * Creates a new Quantum-Safe Vault with PQC key material.
+     * Creates a new prototype vault with PQC key material.
      * The vault encrypts identity keys using the master password (Argon2id + XChaCha20-Poly1305).
      */
     static async createVault(password: string): Promise<boolean> {

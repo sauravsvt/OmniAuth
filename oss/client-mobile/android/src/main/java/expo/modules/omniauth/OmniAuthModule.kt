@@ -6,7 +6,6 @@ import com.omniauth.core.Vault
 
 class OmniAuthModule : Module() {
   private var activeVault: Vault? = null
-  private var activePassword: String? = null
 
   override fun definition() = ModuleDefinition {
     Name("OmniAuth")
@@ -15,7 +14,6 @@ class OmniAuthModule : Module() {
       try {
         val vault = Vault(password)
         activeVault = vault
-        activePassword = password
         return@AsyncFunction "SUCCESS"
       } catch (e: Exception) {
         throw Exception("Vault Creation Failed: ${e.message}")
@@ -56,7 +54,6 @@ class OmniAuthModule : Module() {
 
     Function("lock") {
       activeVault = null
-      activePassword = null
     }
   }
 }

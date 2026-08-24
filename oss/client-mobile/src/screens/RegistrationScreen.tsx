@@ -13,7 +13,7 @@ export default function RegistrationScreen() {
             return;
         }
 
-        setStatus('Generating Quantum Keys...');
+        setStatus('Generating PQC keys...');
 
         setTimeout(async () => {
             const success = await CryptoService.createVault(password);
@@ -22,7 +22,7 @@ export default function RegistrationScreen() {
                 const pubKey = await CryptoService.getPublicKey(password);
                 setDebugKey(pubKey);
                 setStatus('Vault Created');
-                Alert.alert('Success', 'Your identity is now Quantum-Proof.');
+                Alert.alert('Success', 'PQC prototype vault created. This is not a production security claim.');
             } else {
                 setStatus('Failed');
             }
@@ -31,19 +31,23 @@ export default function RegistrationScreen() {
 
     const handleTestSign = async () => {
         try {
-            const nonce = "server_challenge_12345";
-            const sig = await CryptoService.signChallenge(password, nonce);
-
-            Alert.alert('Sending to Quantum Backend...', 'Verifying Dilithium Signature...');
-
             const baseUrl = Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
+            const challengeResponse = await fetch(`${baseUrl}/api/v1/challenge`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const challenge = await challengeResponse.json();
+            const sig = await CryptoService.signChallenge(password, challenge.challenge);
+
+            Alert.alert('Sending to PQC Prototype Backend...', 'Verifying ML-DSA signature against a one-time challenge...');
 
             const response = await fetch(`${baseUrl}/api/v1/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     public_key: debugKey,
-                    message: nonce,
+                    challenge_id: challenge.challenge_id,
+                    message: challenge.challenge,
                     signature: sig
                 })
             });
@@ -51,7 +55,7 @@ export default function RegistrationScreen() {
             const json = await response.json();
 
             if (json.success) {
-                Alert.alert('QUANTUM VERIFIED', 'The backend confirmed your Identity using Dilithium-3.');
+                Alert.alert('PQC SIGNATURE VERIFIED', 'The backend confirmed this one-time challenge using ML-DSA.');
             } else {
                 Alert.alert('REJECTED', `Backend Error: ${json.error}`);
             }
@@ -64,7 +68,7 @@ export default function RegistrationScreen() {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>OmniAuth</Text>
-            <Text style={styles.subtitle}>Quantum-Safe Identity</Text>
+            <Text style={styles.subtitle}>Post-quantum authentication prototype</Text>
 
             <TextInput
                 style={styles.input}

@@ -3,7 +3,6 @@ import omniauth_core
 
 public class OmniAuthModule: Module {
   private var activeVault: Vault? = nil
-  private var activePassword: String? = nil
 
   public func definition() -> ModuleDefinition {
     Name("OmniAuth")
@@ -12,7 +11,6 @@ public class OmniAuthModule: Module {
       do {
         let vault = try Vault(masterPassword: password)
         self.activeVault = vault
-        self.activePassword = password
         return "SUCCESS"
       } catch {
         throw Exception(name: "VaultCreationError", description: error.localizedDescription)
@@ -63,7 +61,6 @@ public class OmniAuthModule: Module {
 
     Function("lock") {
       self.activeVault = nil
-      self.activePassword = nil
     }
   }
 }
