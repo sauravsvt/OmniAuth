@@ -43,4 +43,6 @@ Opt-in phrases include: `let's do`, `commit this`, `auto-git this milestone`, `c
 
 - `oss/` is AGPL.
 - `proprietary/` is proprietary.
+- Documentation and public research are CC BY 4.0 unless a file says otherwise.
+- Project names, logos, domains, and product branding are reserved.
 - Do not move files across this boundary. Do not relicense files. Stop and ask if a refactor would cross.

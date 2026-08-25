@@ -197,8 +197,11 @@ env EXPO_NO_TELEMETRY=1 npx --yes expo-doctor
 ---
 
 ## License
-- **OSS Components**: GNU AGPL v3.0 (See [LICENSE](LICENSE)). Copyright (c) 2025 Saurav Shriwastav.
+- **OSS Components**: GNU AGPL v3.0 only (See [LICENSE](LICENSE)). Copyright (c) 2025-2026 Saurav Shriwastav.
+- **Documentation/Public Research**: Creative Commons Attribution 4.0 International (See [LICENSE-DOCS](LICENSE-DOCS)).
 - **Proprietary Components**: Proprietary License (See [LICENSE-PROPRIETARY](LICENSE-PROPRIETARY)). All Rights Reserved.
+- **Branding**: OmniAuth, VoxonLabs.com, Voxon Labs, logos, domain names, product names, and trade dress are not licensed for reuse (See [TRADEMARKS.md](TRADEMARKS.md)).
+- **Commercial licensing contact**: https://VoxonLabs.com.
 
 ## Roadmap
 - Enable Rust-to-Go interop tests after FIPS library encoding alignment.
