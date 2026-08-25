@@ -41,7 +41,10 @@ For mobile work in `oss/client-mobile`:
 
 ```bash
 npm install
-npm test
+npm test -- --runInBand
+npm run typecheck -- --noEmit
+npm audit
+env EXPO_NO_TELEMETRY=1 npx --yes expo-doctor
 ```
 
 Use the package manager and scripts actually present in the project. Do not invent commands if scripts are missing.

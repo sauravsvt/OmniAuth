@@ -54,11 +54,15 @@ jobs:
 
       - name: Type Check (TypeScript)
         working-directory: ./oss/client-mobile
-        run: npm run tsc -- --noEmit
+        run: npm run typecheck -- --noEmit
 
       - name: Run Jest Tests
         working-directory: ./oss/client-mobile
-        run: npm test
+        run: npm test -- --runInBand
+
+      - name: Audit Mobile Dependencies
+        working-directory: ./oss/client-mobile
+        run: npm audit
 
   # JOB 3: The Backend (Go)
   test-backend:

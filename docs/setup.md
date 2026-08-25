@@ -63,5 +63,8 @@ go test ./...
 
 # Mobile gates
 cd oss/client-mobile
-npm test
+npm test -- --runInBand
+npm run typecheck -- --noEmit
+npm audit
+env EXPO_NO_TELEMETRY=1 npx --yes expo-doctor
 ```

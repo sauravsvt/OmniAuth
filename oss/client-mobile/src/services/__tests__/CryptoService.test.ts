@@ -1,6 +1,6 @@
 import { CryptoService } from '../CryptoService';
 
-jest.mock('expo-modules-core', () => ({
+jest.mock('expo', () => ({
     requireNativeModule: jest.fn(() => ({
         createVault: jest.fn((_pwd: string) => Promise.resolve('SUCCESS')),
         getPublicKey: jest.fn((_pwd: string) => Promise.resolve('mock_dilithium_pk_base64')),
